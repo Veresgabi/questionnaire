@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import static Services.PasswordEncrypter.encrypt;
+
 @Controller
 @CrossOrigin
 @RequestMapping("/user")
@@ -89,7 +91,7 @@ public class UserController {
     public UserResponseDTO addAdmin(@RequestBody User user) throws Exception {
         User user1 = new User();
         user1.setUserName("Admin");
-        user1.setPassword("admin123");
+        user1.setPassword(encrypt("admin123"));
         user1.setPrivacyStatement(true);
         user1.setRegistrationNum("1a");
         user1.setRole(Enums.Role.ADMIN);
@@ -109,9 +111,10 @@ public class UserController {
     @PostMapping("/addUnionMemberAdmin")
     @ResponseBody
     public UserResponseDTO addUnionMemberAdmin(@RequestBody User user) throws Exception {
+        userRepository.deleteAll();
         User user1 = new User();
         user1.setUserName("AdminSzakszerv");
-        user1.setPassword("admin456");
+        user1.setPassword(encrypt("admin456"));
         user1.setPrivacyStatement(true);
         user1.setRegistrationNum("1b");
         user1.setRole(Enums.Role.UNION_MEMBER_ADMIN);
