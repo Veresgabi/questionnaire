@@ -86,13 +86,24 @@ public class UserController {
 
     @PostMapping("/addAdmin")
     @ResponseBody
-    public User addAdmin(@RequestBody User user) throws Exception {
+    public UserResponseDTO addAdmin(@RequestBody User user) throws Exception {
         User user1 = new User();
         user1.setUserName("Admin");
         user1.setPassword("admin123");
         user1.setPrivacyStatement(true);
+        user1.setRegistrationNum("1a");
         user1.setRole(Enums.Role.ADMIN);
-        return userRepository.save(user1);
+
+        UserResponseDTO response = new UserResponseDTO();
+
+        try {
+            userRepository.save(user1);
+            response.setSuccessful(true);
+        }
+        catch (Exception e) {
+            response.setResponseText("A hiba a következő: " + e.getMessage());
+        }
+        return response;
     }
 
     @PostMapping("/addUnionMemberAdmin")
@@ -102,6 +113,7 @@ public class UserController {
         user1.setUserName("AdminSzakszerv");
         user1.setPassword("admin456");
         user1.setPrivacyStatement(true);
+        user1.setRegistrationNum("1b");
         user1.setRole(Enums.Role.UNION_MEMBER_ADMIN);
 
         UserResponseDTO response = new UserResponseDTO();
@@ -111,7 +123,7 @@ public class UserController {
             response.setSuccessful(true);
         }
         catch (Exception e) {
-            response.setResponseText("A hiba a következő: " + e);
+            response.setResponseText("A hiba a következő: " + e.getMessage());
         }
         return response;
     }
