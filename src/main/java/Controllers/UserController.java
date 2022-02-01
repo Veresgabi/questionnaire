@@ -97,12 +97,22 @@ public class UserController {
 
     @PostMapping("/addUnionMemberAdmin")
     @ResponseBody
-    public User addUnionMemberAdmin(@RequestBody User user) throws Exception {
+    public UserResponseDTO addUnionMemberAdmin(@RequestBody User user) throws Exception {
         User user1 = new User();
         user1.setUserName("AdminSzakszerv");
         user1.setPassword("admin456");
         user1.setPrivacyStatement(true);
         user1.setRole(Enums.Role.UNION_MEMBER_ADMIN);
-        return userRepository.save(user1);
+
+        UserResponseDTO response = new UserResponseDTO();
+
+        try {
+            userRepository.save(user1);
+            response.setSuccessful(true);
+        }
+        catch (Exception e) {
+            response.setResponseText("A hiba a következő: " + e);
+        }
+        return response;
     }
 }
