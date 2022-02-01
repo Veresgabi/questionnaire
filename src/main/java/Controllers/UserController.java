@@ -3,7 +3,9 @@ package Controllers;
 import DTOs.UserRequestDTO;
 import DTOs.UserResponseDTO;
 import Models.User;
+import Repositories.UserRepository;
 import Services.IUserService;
+import Utils.Enums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,8 @@ public class UserController {
     @Autowired
     public IUserService userService;
 
+    @Autowired
+    public UserRepository userRepository;
 
     @PostMapping("/saveUser")
     @ResponseBody
@@ -78,5 +82,27 @@ public class UserController {
     public UserResponseDTO checkAndRefreshToken(@RequestBody User user) throws Exception {
         UserResponseDTO response = userService.checkAndRefreshToken(user);
         return userService.removeUserPassword(response);
+    }
+
+    @PostMapping("/addAdmin")
+    @ResponseBody
+    public User addAdmin(@RequestBody User user) throws Exception {
+        User user1 = new User();
+        user1.setUserName("Admin");
+        user1.setPassword("admin123");
+        user1.setPrivacyStatement(true);
+        user1.setRole(Enums.Role.ADMIN);
+        return userRepository.save(user1);
+    }
+
+    @PostMapping("/addUnionMemberAdmin")
+    @ResponseBody
+    public User addUnionMemberAdmin(@RequestBody User user) throws Exception {
+        User user1 = new User();
+        user1.setUserName("AdminSzakszerv");
+        user1.setPassword("admin456");
+        user1.setPrivacyStatement(true);
+        user1.setRole(Enums.Role.UNION_MEMBER_ADMIN);
+        return userRepository.save(user1);
     }
 }
