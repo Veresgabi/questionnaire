@@ -14,9 +14,7 @@
 	<name>questionnaire</name>
 	<packaging>jar</packaging>
 	<description>Demo project for Spring Boot</description>
-	<properties>
-		<java.version>11</java.version>
-	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.tomcat.embed</groupId>
