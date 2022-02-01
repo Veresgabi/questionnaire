@@ -93,7 +93,7 @@ public class QuestionnaireService implements IQuestionnaireService {
                 }
                 // Validate state change
                 else if (questionnaire.isStateChange()) {
-                    var validateStateResult = validateQuestionnaireStateChange(questionnaire, queriedQuestionnaire);
+                    String validateStateResult = validateQuestionnaireStateChange(questionnaire, queriedQuestionnaire);
                     if (validateStateResult != "OK") {
                         response.setResponseText(validateStateResult);
                         response.setQuestionnaireList(questionnaireRepository.findAllOrderByLastModDesc());
