@@ -86,7 +86,7 @@ public class UserController {
         return userService.removeUserPassword(response);
     }
 
-    @PostMapping("/addAdmin")
+    /* @PostMapping("/addAdmin")
     @ResponseBody
     public UserResponseDTO addAdmin(@RequestBody User user) throws Exception {
         User user1 = new User();
@@ -111,7 +111,6 @@ public class UserController {
     @PostMapping("/addUnionMemberAdmin")
     @ResponseBody
     public UserResponseDTO addUnionMemberAdmin(@RequestBody User user) throws Exception {
-        userRepository.deleteAll();
         User user1 = new User();
         user1.setUserName("AdminSzakszerv");
         user1.setPassword(encrypt("admin456"));
@@ -129,5 +128,5 @@ public class UserController {
             response.setResponseText("A hiba a következő: " + e.getMessage());
         }
         return response;
-    }
+    } */
 }
