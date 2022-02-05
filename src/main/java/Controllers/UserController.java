@@ -2,13 +2,17 @@ package Controllers;
 
 import DTOs.UserRequestDTO;
 import DTOs.UserResponseDTO;
+import Models.UnionMembershipNumber;
 import Models.User;
+import Repositories.UnionMembershipNumRepository;
 import Repositories.UserRepository;
 import Services.IUserService;
 import Utils.Enums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 import static Services.PasswordEncrypter.encrypt;
 
@@ -22,6 +26,9 @@ public class UserController {
 
     @Autowired
     public UserRepository userRepository;
+
+    @Autowired
+    public UnionMembershipNumRepository unionMembershipNumRepository;
 
     @PostMapping("/saveUser")
     @ResponseBody
@@ -81,9 +88,15 @@ public class UserController {
 
     @PostMapping("/refreshToken")
     @ResponseBody
-    public UserResponseDTO checkAndRefreshToken(@RequestBody User user) throws Exception {
+    public UserResponseDTO checkAndRefreshToken(@RequestBody User user) {
         UserResponseDTO response = userService.checkAndRefreshToken(user);
         return userService.removeUserPassword(response);
+    }
+
+    @GetMapping("/getUnionMembers")
+    @ResponseBody
+    public List<UnionMembershipNumber> getUnionMembershipNumbers() {
+        return unionMembershipNumRepository.findAll();
     }
 
     /* @PostMapping("/addAdmin")
