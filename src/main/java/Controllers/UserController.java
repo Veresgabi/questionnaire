@@ -165,7 +165,8 @@ public class UserController {
         LocalDateTime today = LocalDateTime.now().minusHours(1);
         QuestionnaireDTO response = new QuestionnaireDTO();
         try {
-            Questionnaire questionnaire = questionnaireRepository.getQuestionnaireById(3l);
+            Long id = Long.parseLong("3");
+            Questionnaire questionnaire = questionnaireRepository.getQuestionnaireById(id);
             questionnaire.setDeadline(today);
             questionnaireRepository.save(questionnaire);
             response.setSuccessful(true);
