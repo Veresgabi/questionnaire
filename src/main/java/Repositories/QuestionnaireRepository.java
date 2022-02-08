@@ -5,6 +5,7 @@ import Models.User;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface QuestionnaireRepository extends CrudRepository<Questionnaire, Long> {
@@ -21,4 +22,6 @@ public interface QuestionnaireRepository extends CrudRepository<Questionnaire, L
   List<Questionnaire> findPublishedQuestionnaires(String userRegistrationNumber);
 
   List<Questionnaire> findQuestionnaireByTitle(String title);
+
+  Questionnaire getQuestionnaireByTitle(String title);
 }

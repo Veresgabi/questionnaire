@@ -24,7 +24,7 @@ import java.util.MissingResourceException;
 import static Services.PasswordEncrypter.encrypt;
 
 @Service
-public class UserService implements IUserService{
+public class UserService implements IUserService {
 
     private final String errorRegistration = "A regisztráció sikertelen a következő hiba miatt: ";
     private final String errorLogin = "A bejelentkezés sikertelen a következő hiba miatt: ";

@@ -1,17 +1,24 @@
 package Controllers;
 
+import DTOs.QuestionnaireDTO;
 import DTOs.UserRequestDTO;
 import DTOs.UserResponseDTO;
+import Models.Questionnaire;
 import Models.UnionMembershipNumber;
 import Models.User;
+import Repositories.QuestionnaireRepository;
 import Repositories.UnionMembershipNumRepository;
 import Repositories.UserRepository;
+import Services.IEmailService;
+import Services.IQuestionnaireService;
 import Services.IUserService;
 import Utils.Enums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 import static Services.PasswordEncrypter.encrypt;
@@ -29,6 +36,12 @@ public class UserController {
 
     @Autowired
     public UnionMembershipNumRepository unionMembershipNumRepository;
+
+    @Autowired
+    public IEmailService emailService;
+
+    @Autowired
+    public QuestionnaireRepository questionnaireRepository;
 
     @PostMapping("/saveUser")
     @ResponseBody
@@ -93,10 +106,75 @@ public class UserController {
         return userService.removeUserPassword(response);
     }
 
-    @GetMapping("/getUnionMembers")
+    @GetMapping("/testGetUnionMembers")
     @ResponseBody
-    public List<UnionMembershipNumber> getUnionMembershipNumbers() {
+    public List<UnionMembershipNumber> testGetUnionMembershipNumbers() {
         return unionMembershipNumRepository.findAll();
+    }
+
+    @GetMapping("/testSendEmail")
+    @ResponseBody
+    public UserResponseDTO testSendEmail() {
+        String text = "This is a text e-mail. please visit http://localhost:8080/user/testGetRedirection";
+
+        UserResponseDTO response = new UserResponseDTO();
+
+        try {
+            emailService.sendSimpleMessage("veres.gabor.attila@gmail.com", "Testing", text);
+            response.setSuccessful(true);
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+
+        return response;
+
+    }
+
+    @RequestMapping("/testGetRedirection")
+    @ResponseBody
+    public String testGetRedirection(@RequestParam(name = "id") String uuid) {
+        String test = uuid;
+        String newUuid = "sdfsda234234sdfe242";
+        return
+                "    <body>\n" +
+                        "        <div>\n" +
+                        "            <button onclick=\"setToken()\">Set Token</button>\n" +
+                        "            <button onclick=\"getToken()\">Get Token</button>\n" +
+                        "        </div>\n" +
+                        "    </body>\n" +
+                        "    <script>\n" +
+                        "\n" +
+                        "        function setToken() {\n" +
+                        "            localStorage.setItem(\"questionnaireTokenUUID\", \"" + newUuid + "\");\n" +
+                        "            console.log(localStorage.getItem(\"questionnaireTokenUUID\"));\n" +
+                        "        }\n" +
+                        "\n" +
+                        "        function getToken() {\n" +
+                        "            console.log(localStorage.getItem(\"questionnaireTokenUUID\"));\n" +
+                        "        }\n" +
+                        "    </script>\n" +
+                        "</html>";
+
+    }
+
+    @GetMapping("/testExpireQuestionnaireDeadline")
+    @ResponseBody
+    public QuestionnaireDTO testExpireQuestionnaireDeadline() {
+        LocalDateTime today = LocalDateTime.now().minusHours(1);
+        QuestionnaireDTO response = new QuestionnaireDTO();
+        try {
+            Questionnaire questionnaire = questionnaireRepository.getQuestionnaireByTitle("próba");
+            questionnaire.setDeadline(today);
+            questionnaireRepository.save(questionnaire);
+            response.setSuccessful(true);
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
     }
 
     /* @PostMapping("/addAdmin")
