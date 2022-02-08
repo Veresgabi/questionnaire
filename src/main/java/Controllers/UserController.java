@@ -177,6 +177,23 @@ public class UserController {
         return response;
     }
 
+    @GetMapping("/testGetAllQuestionnaires")
+    @ResponseBody
+    public QuestionnaireDTO testGetAllQuestionnaires() {
+        LocalDateTime today = LocalDateTime.now().minusHours(1);
+        QuestionnaireDTO response = new QuestionnaireDTO();
+        try {
+            List<Questionnaire> questionnaires = questionnaireRepository.findAllOrderByLastModDesc();
+            response.setQuestionnaireList(questionnaires);
+            response.setSuccessful(true);
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
+    }
+
     /* @PostMapping("/addAdmin")
     @ResponseBody
     public UserResponseDTO addAdmin(@RequestBody User user) throws Exception {
