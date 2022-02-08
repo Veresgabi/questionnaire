@@ -24,4 +24,6 @@ public interface QuestionnaireRepository extends CrudRepository<Questionnaire, L
   List<Questionnaire> findQuestionnaireByTitle(String title);
 
   Questionnaire getQuestionnaireByTitle(String title);
+
+  Questionnaire getQuestionnaireById(Long id);
 }
