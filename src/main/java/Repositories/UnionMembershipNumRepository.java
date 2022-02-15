@@ -18,4 +18,7 @@ public interface UnionMembershipNumRepository extends CrudRepository<UnionMember
 
   @Query("SELECT COUNT(id) FROM UnionMembershipNumber u where u.isActive = TRUE")
   Integer getNumberOfUnionMemberUsers();
+
+  @Query("SELECT COUNT(id) FROM UnionMembershipNumber")
+  Integer getNumberOfRecords();
 }

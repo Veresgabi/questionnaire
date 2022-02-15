@@ -38,4 +38,9 @@ public class Enums {
         VAC,
         VAC_BORROWED
     }
+
+    public enum ExcelUploadType {
+        REGISTRATION_NUMBER,
+        UNION_MEMBERSHIP_NUMBER
+    }
 }

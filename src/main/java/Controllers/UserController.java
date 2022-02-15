@@ -4,9 +4,11 @@ import DTOs.QuestionnaireDTO;
 import DTOs.UserRequestDTO;
 import DTOs.UserResponseDTO;
 import Models.Questionnaire;
+import Models.RegistrationNumberQuestionnaire;
 import Models.UnionMembershipNumber;
 import Models.User;
 import Repositories.QuestionnaireRepository;
+import Repositories.RegistrationNumberQuestionnaireRepository;
 import Repositories.UnionMembershipNumRepository;
 import Repositories.UserRepository;
 import Services.IEmailService;
@@ -17,7 +19,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -42,6 +47,9 @@ public class UserController {
 
     @Autowired
     public QuestionnaireRepository questionnaireRepository;
+
+    @Autowired
+    public RegistrationNumberQuestionnaireRepository regNumQuestRepository;
 
     @PostMapping("/saveUser")
     @ResponseBody
@@ -132,33 +140,6 @@ public class UserController {
 
     }
 
-    @RequestMapping("/testGetRedirection")
-    @ResponseBody
-    public String testGetRedirection(@RequestParam(name = "id") String uuid) {
-        String test = uuid;
-        String newUuid = "sdfsda234234sdfe242";
-        return
-                "    <body>\n" +
-                        "        <div>\n" +
-                        "            <button onclick=\"setToken()\">Set Token</button>\n" +
-                        "            <button onclick=\"getToken()\">Get Token</button>\n" +
-                        "        </div>\n" +
-                        "    </body>\n" +
-                        "    <script>\n" +
-                        "\n" +
-                        "        function setToken() {\n" +
-                        "            localStorage.setItem(\"questionnaireTokenUUID\", \"" + newUuid + "\");\n" +
-                        "            console.log(localStorage.getItem(\"questionnaireTokenUUID\"));\n" +
-                        "        }\n" +
-                        "\n" +
-                        "        function getToken() {\n" +
-                        "            console.log(localStorage.getItem(\"questionnaireTokenUUID\"));\n" +
-                        "        }\n" +
-                        "    </script>\n" +
-                        "</html>";
-
-    }
-
     @GetMapping("/testExpireQuestionnaireDeadline")
     @ResponseBody
     public QuestionnaireDTO testExpireQuestionnaireDeadline() {
@@ -193,6 +174,51 @@ public class UserController {
             else response.setResponseText(e.toString());
         }
         return response;
+    }
+
+    @PostMapping("/transTest")
+    @ResponseBody
+    @Transactional
+    public UserResponseDTO transactionTest(@RequestBody User user) throws Exception {
+        User userWithoutRegNum = new User();
+        userWithoutRegNum.setUserName("userWithoutRegNum");
+        userWithoutRegNum.setPassword(encrypt("user123"));
+        userWithoutRegNum.setPrivacyStatement(true);
+        userWithoutRegNum.setRole(Enums.Role.USER);
+
+        User user1 = new User();
+        user1.setUserName("user1");
+        user1.setPassword(encrypt("user123"));
+        user1.setPrivacyStatement(true);
+        user1.setRegistrationNum("1a");
+        user1.setRole(Enums.Role.USER);
+
+        RegistrationNumberQuestionnaire rnq1 = new RegistrationNumberQuestionnaire();
+        rnq1.setQuestionnaireId(999L);
+        rnq1.setRegistrationNum("333L");
+
+        RegistrationNumberQuestionnaire rnq2 = new RegistrationNumberQuestionnaire();
+        rnq2.setQuestionnaireId(555L);
+        rnq2.setRegistrationNum("222L");
+
+        List<RegistrationNumberQuestionnaire> rnqList = Arrays.asList(rnq1, rnq2);
+
+        UserResponseDTO response = new UserResponseDTO();
+
+        try {
+            transactionOperation(user1, userWithoutRegNum, rnqList);
+            response.setSuccessful(true);
+        }
+        catch (Exception e) {
+            response.setResponseText("A hiba a következő: " + e.getMessage());
+        }
+        return response;
+    }
+
+    private void transactionOperation(User user, User userWithoutRegNum, List<RegistrationNumberQuestionnaire> rnqList) {
+        regNumQuestRepository.saveAll(rnqList);
+        userRepository.save(user);
+        userRepository.save(userWithoutRegNum);
     }
 
     /* @PostMapping("/addAdmin")

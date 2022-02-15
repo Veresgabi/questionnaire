@@ -7,4 +7,5 @@ import javax.servlet.http.HttpServletResponse;
 public interface IExcelService {
     ExcelDTO readFromUploadedExcel(ExcelDTO request) throws Exception;
     void downloadExcelTest(HttpServletResponse response) throws Exception;
+    ExcelDTO getExcelStatics(ExcelDTO excelDTO);
 }

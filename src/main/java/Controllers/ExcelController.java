@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -22,6 +23,7 @@ public class ExcelController {
     @Autowired
     IExcelService excelService;
 
+    @Transactional
     @PostMapping("/readFromExcel")
     @ResponseBody
     public ExcelDTO readFromExcel(@RequestParam("file") MultipartFile file,
@@ -39,6 +41,13 @@ public class ExcelController {
         request.setUser(user);
 
         return excelService.readFromUploadedExcel(request);
+    }
+
+    @Transactional
+    @PostMapping("/getExcelStatics")
+    @ResponseBody
+    public ExcelDTO getExcelStatics(@RequestBody ExcelDTO excelDTO) {
+        return excelService.getExcelStatics(excelDTO);
     }
 
     @GetMapping("/downloadExcelTest")

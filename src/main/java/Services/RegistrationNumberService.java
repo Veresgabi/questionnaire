@@ -1,8 +1,10 @@
 package Services;
 
+import Models.ExcelUploadStatics;
 import Models.RegistrationNumber;
 import Models.UnionMembershipNumber;
 import Models.User;
+import Repositories.ExcelUploadStaticsRepository;
 import Repositories.RegNumberRepository;
 import Repositories.UnionMembershipNumRepository;
 import Repositories.UserRepository;
@@ -10,6 +12,7 @@ import Utils.Enums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,8 +27,10 @@ public class RegistrationNumberService implements IRegistrationNumberService {
     public UserRepository userRepository;
     @Autowired
     public UnionMembershipNumRepository unionMembershipNumRepo;
+    @Autowired
+    public ExcelUploadStaticsRepository excelUploadStaticsRepository;
 
-    public void saveNumberWithCheck(Map<String, List<String>> regNumbers) {
+    public ExcelUploadStatics saveNumberWithCheck(Map<String, List<String>> regNumbers, String originalFileName, boolean needToInactivate) {
 
         List<RegistrationNumber> insertedRegNumbers = new ArrayList<>();
         List<RegistrationNumber> inactivatedRegNumbers = new ArrayList<>();
@@ -69,7 +74,9 @@ public class RegistrationNumberService implements IRegistrationNumberService {
                 }
             }
         }
-        inactivatedRegNumbers = allRegNumbers.stream().filter(rn -> rn.isNeedToInactivate()).collect(Collectors.toList());
+        if (needToInactivate) {
+            inactivatedRegNumbers = allRegNumbers.stream().filter(rn -> rn.isNeedToInactivate()).collect(Collectors.toList());
+        }
 
         if (!insertedRegNumbers.isEmpty()) regNumberRepository.saveAll(insertedRegNumbers);
 
@@ -95,5 +102,27 @@ public class RegistrationNumberService implements IRegistrationNumberService {
             userRepository.deleteAll(usersToDelete);
             unionMembershipNumRepo.saveAll(unionMembNumsToInactive);
         }
+        ExcelUploadStatics statics = new ExcelUploadStatics();
+
+        if (!insertedRegNumbers.isEmpty() || needToInactivate) {
+            ExcelUploadStatics foundStatics = excelUploadStaticsRepository.findFirstByTypeOfUpload(Enums.ExcelUploadType.REGISTRATION_NUMBER);
+            if (foundStatics != null) statics.setId(foundStatics.getId());
+
+            statics.setLastUploadedFile(originalFileName);
+            statics.setLastUpload(LocalDateTime.now());
+            statics.setTypeOfUpload(Enums.ExcelUploadType.REGISTRATION_NUMBER);
+
+            Integer numberOfActiveUsers = 0;
+            numberOfActiveUsers = regNumberRepository.getNumberOfUsers();
+            Integer numberOfRecords = 0;
+            numberOfRecords = regNumberRepository.getNumberOfRecords();
+            Integer numberOfInactiveUsers = numberOfRecords - numberOfActiveUsers;
+            statics.setNumberOfActiveElements(numberOfActiveUsers);
+            statics.setNumberOfInactiveElements(numberOfInactiveUsers);
+
+            excelUploadStaticsRepository.save(statics);
+        }
+
+        return statics;
     }
 }

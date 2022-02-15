@@ -17,4 +17,7 @@ public interface RegNumberRepository extends CrudRepository<RegistrationNumber, 
 
     @Query("SELECT COUNT(id) FROM RegistrationNumber r where r.isActive = TRUE")
     Integer getNumberOfUsers();
+
+    @Query("SELECT COUNT(id) FROM RegistrationNumber")
+    Integer getNumberOfRecords();
 }

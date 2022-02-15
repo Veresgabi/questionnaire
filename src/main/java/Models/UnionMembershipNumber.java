@@ -14,16 +14,20 @@ public class UnionMembershipNumber {
   @Column(name = "UnionMembershipNumber", nullable = false)
   private String unionMembershipNum;
 
+  @Column(name = "RegistrationNumber")
+  private String registrationNumber;
+
   @Column(name = "IsActive")
   private boolean isActive;
 
   @Transient
   private boolean needToInactivate = true;
 
-  public UnionMembershipNumber(Long id, String unionMembershipNum, boolean isActive,
+  public UnionMembershipNumber(Long id, String unionMembershipNum, String registrationNumber, boolean isActive,
                                boolean needToInactivate) {
     this.id = id;
     this.unionMembershipNum = unionMembershipNum;
+    this.registrationNumber = registrationNumber;
     this.isActive = isActive;
     this.needToInactivate = needToInactivate;
   }
@@ -44,6 +48,14 @@ public class UnionMembershipNumber {
 
   public void setUnionMembershipNum(String unionMembershipNum) {
     this.unionMembershipNum = unionMembershipNum;
+  }
+
+  public String getRegistrationNumber() {
+    return registrationNumber;
+  }
+
+  public void setRegistrationNumber(String registrationNumber) {
+    this.registrationNumber = registrationNumber;
   }
 
   public boolean isActive() {

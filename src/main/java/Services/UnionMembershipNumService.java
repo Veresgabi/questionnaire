@@ -1,13 +1,16 @@
 package Services;
 
+import Models.ExcelUploadStatics;
 import Models.UnionMembershipNumber;
 import Models.User;
+import Repositories.ExcelUploadStaticsRepository;
 import Repositories.UnionMembershipNumRepository;
 import Repositories.UserRepository;
 import Utils.Enums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,41 +23,56 @@ public class UnionMembershipNumService implements IUnionMembershipNumService {
   public UserRepository userRepository;
   @Autowired
   public UnionMembershipNumRepository unionMembershipNumRepo;
+  @Autowired
+  public ExcelUploadStaticsRepository excelUploadStaticsRepository;
 
-  public void saveNumberWithCheck(Map<Integer, List<String>> unMembNumbers) {
+  public ExcelUploadStatics saveNumberWithCheck(Map<Integer, List<UnionMembershipNumber>> unMembNumbers, String originalFileName) {
     List<UnionMembershipNumber> insertedUnMembNumbers = new ArrayList<>();
     List<UnionMembershipNumber> inactivatedUnMembNumbers = new ArrayList<>();
 
     List<UnionMembershipNumber> allUnMembNumbers = unionMembershipNumRepo.findAll();
 
-    List<User> usersToSetRole = new ArrayList<>();
+    List<User> usersToUpdate = new ArrayList<>();
 
     List<Integer> sheetNumbers = new ArrayList<>(unMembNumbers.keySet());
     for (Integer sheetNumber : sheetNumbers) {
-      for (String unionNum : unMembNumbers.get(sheetNumber)) {
+      for (UnionMembershipNumber unionNum : unMembNumbers.get(sheetNumber)) {
         UnionMembershipNumber sameUnMembNum = null;
 
         if (allUnMembNumbers != null && !allUnMembNumbers.isEmpty()) {
           sameUnMembNum = allUnMembNumbers.stream().filter(un -> un.getUnionMembershipNum()
-              .equals(unionNum)).findFirst().orElse(null);
+              .equals(unionNum.getUnionMembershipNum())).findFirst().orElse(null);
         }
 
         if (sameUnMembNum == null) {
-          UnionMembershipNumber unionMembershipNumber = new UnionMembershipNumber();
-          unionMembershipNumber.setUnionMembershipNum(unionNum);
-          unionMembershipNumber.setActive(true);
-          insertedUnMembNumbers.add(unionMembershipNumber);
+          unionNum.setActive(true);
+          insertedUnMembNumbers.add(unionNum);
         }
         else {
           sameUnMembNum.setNeedToInactivate(false);
 
-          if (!sameUnMembNum.isActive()) {
-            sameUnMembNum.setActive(true);
+          if (!sameUnMembNum.isActive() || (sameUnMembNum.getRegistrationNumber() != null
+                  && !sameUnMembNum.getRegistrationNumber().equals(unionNum.getRegistrationNumber()))) {
+
             User user = userRepository.findByUnionMembershipNum(sameUnMembNum.getUnionMembershipNum());
             if (user != null) {
-              user.setRole(Enums.Role.UNION_MEMBER_USER);
-              usersToSetRole.add(user);
+
+              if (!sameUnMembNum.getRegistrationNumber().equals(unionNum.getRegistrationNumber())) {
+                user.setRole(Enums.Role.USER);
+                user.setUnionMembershipNum(null);
+              }
+              else user.setRole(Enums.Role.UNION_MEMBER_USER);
+
+              usersToUpdate.add(user);
             }
+            sameUnMembNum.setActive(true);
+            sameUnMembNum.setRegistrationNumber(unionNum.getRegistrationNumber());
+
+            insertedUnMembNumbers.add(sameUnMembNum);
+          }
+
+          if (sameUnMembNum.getRegistrationNumber() == null && unionNum.getRegistrationNumber() != null) {
+            sameUnMembNum.setRegistrationNumber(unionNum.getRegistrationNumber());
             insertedUnMembNumbers.add(sameUnMembNum);
           }
         }
@@ -72,11 +90,32 @@ public class UnionMembershipNumService implements IUnionMembershipNumService {
         if (user != null) {
           // user.setUnionMembershipNum(null);
           user.setRole(Enums.Role.USER);
-          usersToSetRole.add(user);
+          usersToUpdate.add(user);
         }
       }
       unionMembershipNumRepo.saveAll(inactivatedUnMembNumbers);
-      userRepository.saveAll(usersToSetRole);
     }
+    if (!usersToUpdate.isEmpty()) userRepository.saveAll(usersToUpdate);
+
+    ExcelUploadStatics statics = new ExcelUploadStatics();
+
+    ExcelUploadStatics foundStatics = excelUploadStaticsRepository.findFirstByTypeOfUpload(Enums.ExcelUploadType.UNION_MEMBERSHIP_NUMBER);
+    if (foundStatics != null) statics.setId(foundStatics.getId());
+
+    statics.setLastUploadedFile(originalFileName);
+    statics.setLastUpload(LocalDateTime.now());
+    statics.setTypeOfUpload(Enums.ExcelUploadType.UNION_MEMBERSHIP_NUMBER);
+
+    Integer numberOfActiveUnionMemberships = 0;
+    numberOfActiveUnionMemberships = unionMembershipNumRepo.getNumberOfUnionMemberUsers();
+    Integer numberOfRecords = 0;
+    numberOfRecords = unionMembershipNumRepo.getNumberOfRecords();
+    Integer numberOfInactiveUsers = numberOfRecords - numberOfActiveUnionMemberships;
+    statics.setNumberOfActiveElements(numberOfActiveUnionMemberships);
+    statics.setNumberOfInactiveElements(numberOfInactiveUsers);
+
+    excelUploadStaticsRepository.save(statics);
+
+    return statics;
   }
 }
