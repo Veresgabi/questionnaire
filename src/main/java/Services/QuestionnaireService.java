@@ -626,8 +626,8 @@ public class QuestionnaireService implements IQuestionnaireService {
 
                     for (Choice c : cq.getChoices()) {
                         Integer numberOfSelection = (int) choiceAnswers.stream().filter(ca -> ca.getContent().equals(c.getMark())).count();
-                        String percentOfSelection = decimalFormat.format((double) numberOfSelection / answers.size() * 100) + " %";
-                        if (percentOfSelection.equals("NaN %")) percentOfSelection = "0 %";
+                        int allAnswers = answers.size() > 0 ? answers.size() : 1;
+                        String percentOfSelection = decimalFormat.format((double) numberOfSelection / allAnswers * 100) + " %";
                         c.setNumberOfSelection(numberOfSelection);
                         c.setPercentOfSelection(percentOfSelection);
                     }
