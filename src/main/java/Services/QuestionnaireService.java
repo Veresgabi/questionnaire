@@ -626,10 +626,13 @@ public class QuestionnaireService implements IQuestionnaireService {
 
                     for (Choice c : cq.getChoices()) {
                         Integer numberOfSelection = (int) choiceAnswers.stream().filter(ca -> ca.getContent().equals(c.getMark())).count();
-                        int allAnswers = answers.size() > 0 ? answers.size() : 1;
-                        String percentOfSelection = decimalFormat.format((double) numberOfSelection / allAnswers * 100) + " %";
+
+                        String formattedPercentOfSelection = "0.00 %";
+                        double percentOfSelection = Double.valueOf((double) numberOfSelection / answers.size() * 100);
+                        if (!Double.isNaN(percentOfSelection)) formattedPercentOfSelection = decimalFormat.format(percentOfSelection) + " %";
+
                         c.setNumberOfSelection(numberOfSelection);
-                        c.setPercentOfSelection(percentOfSelection);
+                        c.setPercentOfSelection(formattedPercentOfSelection);
                     }
                     cq.setCompletion(answers.size());
                 }
@@ -646,7 +649,12 @@ public class QuestionnaireService implements IQuestionnaireService {
 
             response.getQuestionnaire().setCompletion(filledQuestionnaires);
             response.getQuestionnaire().setRelatedUsers(relatedUsers);
-            response.getQuestionnaire().setCompletionRate(decimalFormat.format((double) filledQuestionnaires / relatedUsers * 100) + "%");
+            String formattedCompletionRate = "0.00 %";
+
+            double completionRate = Double.valueOf((double) filledQuestionnaires / relatedUsers * 100);
+            if (!Double.isNaN(completionRate)) formattedCompletionRate = decimalFormat.format(completionRate) + " %";
+
+            response.getQuestionnaire().setCompletionRate(formattedCompletionRate);
             response.setSuccessful(true);
         }
         catch (Exception e) {
