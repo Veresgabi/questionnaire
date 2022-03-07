@@ -18,10 +18,10 @@ public class Choice {
     @Column(name = "text", nullable = false, length = 1000)
     private String text;
 
-    @Transient
+    @Column(name = "numberOfSelection")
     private Integer numberOfSelection;
 
-    @Transient
+    @Column(name = "percentOfSelection", length = 100)
     private String percentOfSelection;
 
     @ManyToOne(fetch = FetchType.LAZY)

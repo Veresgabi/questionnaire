@@ -56,19 +56,22 @@ public class Questionnaire implements Comparable<Questionnaire> {
     @Column(name = "deadline")
     private LocalDateTime deadline;
 
+    @Column(name = "questionnaireType")
+    private Enums.QuestionnaireType questionnaireType;
+
     @Transient
     private String formattedDeadline;
 
     @Transient
     private boolean isStateChange;
 
-    @Transient
+    @Column(name = "completion")
     private Integer completion;
 
-    @Transient
+    @Column(name = "completionRate", length = 100)
     private String completionRate;
 
-    @Transient
+    @Column(name = "relatedUsers")
     private Integer relatedUsers;
 
     @Transient
@@ -87,9 +90,10 @@ public class Questionnaire implements Comparable<Questionnaire> {
                          List<ChoiceQuestion> choiceQuestions, List<ScaleQuestion> scaleQuestions,
                          List<TextualQuestion> textualQuestions, boolean isPublished, Enums.State state,
                          LocalDateTime createdAt, String formattedCreatedAt, LocalDateTime lastModified,
-                         String formattedLastModified, LocalDateTime deadline, String formattedDeadline,
-                         boolean isStateChange, Integer completion, String completionRate, Integer completionMako,
-                         Integer relatedUsers, Integer completionMakoBorrowed, Integer completionVac, Integer completionVacBorrowed) {
+                         String formattedLastModified, LocalDateTime deadline, Enums.QuestionnaireType questionnaireType,
+                         String formattedDeadline, boolean isStateChange, Integer completion, String completionRate,
+                         Integer completionMako, Integer relatedUsers, Integer completionMakoBorrowed, Integer completionVac,
+                         Integer completionVacBorrowed) {
         this.id = id;
         this.title = title;
         this.isUnionMembersOnly = isUnionMembersOnly;
@@ -103,6 +107,7 @@ public class Questionnaire implements Comparable<Questionnaire> {
         this.lastModified = lastModified;
         this.formattedLastModified = formattedLastModified;
         this.deadline = deadline;
+        this.questionnaireType = questionnaireType;
         this.formattedDeadline = formattedDeadline;
         this.isStateChange = isStateChange;
         this.completion = completion;
@@ -211,6 +216,14 @@ public class Questionnaire implements Comparable<Questionnaire> {
 
     public void setDeadline(LocalDateTime deadline) {
         this.deadline = deadline;
+    }
+
+    public Enums.QuestionnaireType getQuestionnaireType() {
+        return questionnaireType;
+    }
+
+    public void setQuestionnaireType(Enums.QuestionnaireType questionnaireType) {
+        this.questionnaireType = questionnaireType;
     }
 
     public String getFormattedDeadline() {

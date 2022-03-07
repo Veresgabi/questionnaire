@@ -43,4 +43,15 @@ public class Enums {
         REGISTRATION_NUMBER,
         UNION_MEMBERSHIP_NUMBER
     }
+
+    public enum CompletedLevel {
+        PARTIAL,
+        TOTAL
+    }
+
+    public enum QuestionnaireType {
+        SIMPLE,
+        UNION_MEMBERS_ONLY,
+        MIXED
+    }
 }

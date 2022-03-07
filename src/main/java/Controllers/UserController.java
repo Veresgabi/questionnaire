@@ -17,9 +17,9 @@ import Services.IUserService;
 import Utils.Enums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,16 +40,7 @@ public class UserController {
     public UserRepository userRepository;
 
     @Autowired
-    public UnionMembershipNumRepository unionMembershipNumRepository;
-
-    @Autowired
     public IEmailService emailService;
-
-    @Autowired
-    public QuestionnaireRepository questionnaireRepository;
-
-    @Autowired
-    public RegistrationNumberQuestionnaireRepository regNumQuestRepository;
 
     @PostMapping("/saveUser")
     @ResponseBody
@@ -114,12 +105,6 @@ public class UserController {
         return userService.removeUserPassword(response);
     }
 
-    @GetMapping("/testGetUnionMembers")
-    @ResponseBody
-    public List<UnionMembershipNumber> testGetUnionMembershipNumbers() {
-        return unionMembershipNumRepository.findAll();
-    }
-
     @GetMapping("/testSendEmail")
     @ResponseBody
     public UserResponseDTO testSendEmail() {
@@ -140,45 +125,9 @@ public class UserController {
 
     }
 
-    @GetMapping("/testExpireQuestionnaireDeadline")
-    @ResponseBody
-    public QuestionnaireDTO testExpireQuestionnaireDeadline() {
-        LocalDateTime today = LocalDateTime.now().minusHours(1);
-        QuestionnaireDTO response = new QuestionnaireDTO();
-        try {
-            Long id = Long.parseLong("3");
-            Questionnaire questionnaire = questionnaireRepository.getQuestionnaireById(id);
-            questionnaire.setDeadline(today);
-            questionnaireRepository.save(questionnaire);
-            response.setSuccessful(true);
-        }
-        catch (Exception e) {
-            if (e.getMessage() != null) response.setResponseText(e.getMessage());
-            else response.setResponseText(e.toString());
-        }
-        return response;
-    }
-
-    @GetMapping("/testGetAllQuestionnaires")
-    @ResponseBody
-    public QuestionnaireDTO testGetAllQuestionnaires() {
-        LocalDateTime today = LocalDateTime.now().minusHours(1);
-        QuestionnaireDTO response = new QuestionnaireDTO();
-        try {
-            List<Questionnaire> questionnaires = questionnaireRepository.findAllOrderByLastModDesc();
-            response.setQuestionnaireList(questionnaires);
-            response.setSuccessful(true);
-        }
-        catch (Exception e) {
-            if (e.getMessage() != null) response.setResponseText(e.getMessage());
-            else response.setResponseText(e.toString());
-        }
-        return response;
-    }
-
     @PostMapping("/transTest")
     @ResponseBody
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public UserResponseDTO transactionTest(@RequestBody User user) throws Exception {
         User userWithoutRegNum = new User();
         userWithoutRegNum.setUserName("userWithoutRegNum");
@@ -187,7 +136,7 @@ public class UserController {
         userWithoutRegNum.setRole(Enums.Role.USER);
 
         User user1 = new User();
-        user1.setUserName("user1");
+        user1.setUserName("user88");
         user1.setPassword(encrypt("user123"));
         user1.setPrivacyStatement(true);
         user1.setRegistrationNum("1a");
@@ -206,19 +155,13 @@ public class UserController {
         UserResponseDTO response = new UserResponseDTO();
 
         try {
-            transactionOperation(user1, userWithoutRegNum, rnqList);
+            userService.testTransactionOperation(user1, userWithoutRegNum, rnqList);
             response.setSuccessful(true);
         }
         catch (Exception e) {
             response.setResponseText("A hiba a következő: " + e.getMessage());
         }
         return response;
-    }
-
-    private void transactionOperation(User user, User userWithoutRegNum, List<RegistrationNumberQuestionnaire> rnqList) {
-        regNumQuestRepository.saveAll(rnqList);
-        userRepository.save(user);
-        userRepository.save(userWithoutRegNum);
     }
 
     /* @PostMapping("/addAdmin")

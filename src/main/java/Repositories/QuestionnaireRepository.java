@@ -1,13 +1,13 @@
 package Repositories;
 
 import Models.Questionnaire;
-import Models.User;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
+@Repository
 public interface QuestionnaireRepository extends CrudRepository<Questionnaire, Long> {
 
   List<Questionnaire> findAll();
@@ -19,11 +19,18 @@ public interface QuestionnaireRepository extends CrudRepository<Questionnaire, L
 
   @Query("SELECT q FROM Questionnaire q where (q.state = 1 and q.id not in " +
           "(select questionnaireId from RegistrationNumberQuestionnaire r where r.registrationNum = ?1)) or q.state = 3 order by q.deadline")
-  List<Questionnaire> findPublishedQuestionnaires(String userRegistrationNumber);
+  List<Questionnaire> findQuestionnairesForUsers(String userRegistrationNumber);
+
+  @Query("SELECT q FROM Questionnaire q where (q.state = 1 and q.id not in " +
+          "(select questionnaireId from RegistrationNumberQuestionnaire r where r.registrationNum = ?1 and r.completedLevel = 1)) " +
+          "or q.state = 3 order by q.deadline")
+  List<Questionnaire> findQuestionnairesForUnionMemberUsers(String userRegistrationNumber);
 
   List<Questionnaire> findQuestionnaireByTitle(String title);
 
   Questionnaire getQuestionnaireByTitle(String title);
 
   Questionnaire getQuestionnaireById(Long id);
+
+  void deleteById(Long id);
 }

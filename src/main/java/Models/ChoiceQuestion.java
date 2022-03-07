@@ -35,8 +35,11 @@ public class ChoiceQuestion {
     @JoinColumn(name="choice_quest_Id")
     private List<Choice> choices = new ArrayList<>();
 
+    @Column(name = "completion")
+    private Integer completion;
+
     @Transient
-    private int completion;
+    private boolean isCompletedByCurrentUser;
 
     /* @OneToMany(cascade= CascadeType.ALL)
     @JoinColumn(name="Choice_Id")
@@ -50,7 +53,7 @@ public class ChoiceQuestion {
 
     public ChoiceQuestion(Long id, Integer number, Enums.Type type, boolean isMultipleChoiceEnabled,
                           boolean isUnionMembersOnly, String question, List<Choice> choices, int completion,
-                          Questionnaire questionnaire) {
+                          boolean isCompletedByCurrentUser, Questionnaire questionnaire) {
         this.id = id;
         this.number = number;
         this.type = type;
@@ -60,6 +63,7 @@ public class ChoiceQuestion {
         // this.answers = answers;
         this.isUnionMembersOnly = isUnionMembersOnly;
         this.completion = completion;
+        this.isCompletedByCurrentUser = isCompletedByCurrentUser;
         this.questionnaire = questionnaire;
     }
 
@@ -129,12 +133,20 @@ public class ChoiceQuestion {
         isUnionMembersOnly = unionMembersOnly;
     }
 
-    public int getCompletion() {
+    public Integer getCompletion() {
         return completion;
     }
 
-    public void setCompletion(int completion) {
+    public void setCompletion(Integer completion) {
         this.completion = completion;
+    }
+
+    public boolean isCompletedByCurrentUser() {
+        return isCompletedByCurrentUser;
+    }
+
+    public void setCompletedByCurrentUser(boolean completedByCurrentUser) {
+        isCompletedByCurrentUser = completedByCurrentUser;
     }
 
     public Questionnaire getQuestionnaire() {

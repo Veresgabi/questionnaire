@@ -30,6 +30,9 @@ public class TextualQuestion {
     @Column(name = "Question", nullable = false, length = 1000)
     private String question;
 
+    @Transient
+    private boolean isCompletedByCurrentUser;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="questionnaire_Id")
     @JsonIgnore
@@ -42,14 +45,15 @@ public class TextualQuestion {
     private List<Answer> answers;
 
     public TextualQuestion(Long id, Integer number, Enums.Type type, boolean isOptional,
-                           boolean isUnionMembersOnly, String question, Questionnaire questionnaire,
-                           List<Answer> answers) {
+                           boolean isUnionMembersOnly, String question, boolean isCompletedByCurrentUser,
+                           Questionnaire questionnaire, List<Answer> answers) {
         this.id = id;
         this.number = number;
         this.type = type;
         this.isOptional = isOptional;
         this.isUnionMembersOnly = isUnionMembersOnly;
         this.question = question;
+        this.isCompletedByCurrentUser = isCompletedByCurrentUser;
         this.questionnaire = questionnaire;
         this.answers = answers;
     }
@@ -110,6 +114,14 @@ public class TextualQuestion {
 
     public void setAnswers(List<Answer> answers) {
         this.answers = answers;
+    }
+
+    public boolean isCompletedByCurrentUser() {
+        return isCompletedByCurrentUser;
+    }
+
+    public void setCompletedByCurrentUser(boolean completedByCurrentUser) {
+        isCompletedByCurrentUser = completedByCurrentUser;
     }
 
     public Questionnaire getQuestionnaire() {

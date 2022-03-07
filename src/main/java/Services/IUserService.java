@@ -3,9 +3,12 @@ package Services;
 import DTOs.AbstractDTO;
 import DTOs.UserRequestDTO;
 import DTOs.UserResponseDTO;
+import Models.RegistrationNumberQuestionnaire;
 import Models.User;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public interface IUserService {
@@ -20,4 +23,5 @@ public interface IUserService {
     UserResponseDTO isExpiredPage(User user);
     UserResponseDTO checkAndRefreshToken(User user);
     <T extends AbstractDTO> T removeUserPassword(T response);
+    UserResponseDTO testTransactionOperation(User user, User userWithoutRegNum, List<RegistrationNumberQuestionnaire> rnqList);
 }

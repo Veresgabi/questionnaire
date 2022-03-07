@@ -3,14 +3,8 @@ package Services;
 import DTOs.AbstractDTO;
 import DTOs.UserRequestDTO;
 import DTOs.UserResponseDTO;
-import Models.RegistrationNumber;
-import Models.Token;
-import Models.UnionMembershipNumber;
-import Models.User;
-import Repositories.RegNumberRepository;
-import Repositories.TokenRepository;
-import Repositories.UnionMembershipNumRepository;
-import Repositories.UserRepository;
+import Models.*;
+import Repositories.*;
 import Utils.Enums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -19,6 +13,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.MissingResourceException;
 
 import static Services.PasswordEncrypter.encrypt;
@@ -63,6 +58,8 @@ public class UserService implements IUserService {
     public UnionMembershipNumRepository unionMembershipNumRepo;
     @Autowired
     public ITokenService tokenService;
+    @Autowired
+    public RegistrationNumberQuestionnaireRepository regNumQuestRepository;
 
     public UserResponseDTO saveUser(User user) throws Exception {
 
@@ -488,6 +485,22 @@ public class UserService implements IUserService {
 
     public <T extends AbstractDTO> T removeUserPassword(T response) {
         if (response.getUser() != null) response.getUser().setPassword(null);
+        return response;
+    }
+
+    public UserResponseDTO testTransactionOperation(User user, User userWithoutRegNum, List<RegistrationNumberQuestionnaire> rnqList) {
+        UserResponseDTO response = new UserResponseDTO();
+        try {
+            regNumQuestRepository.saveAll(rnqList);
+            regNumQuestRepository.deleteById(88L);
+            regNumQuestRepository.deleteByQuestionnaireId(101010L);
+            userRepository.save(user);
+            userRepository.save(userWithoutRegNum);
+        }
+        catch (Exception e) {
+            response.setResponseText(e.getMessage());
+        }
+
         return response;
     }
 }

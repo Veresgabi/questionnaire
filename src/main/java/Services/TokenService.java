@@ -40,7 +40,6 @@ public class TokenService implements ITokenService {
             token = tokenRepository.findByUuid(tokenUUID);
 
             if (token != null && LocalDateTime.now().isBefore(token.getValidTo())) {
-
                 response.setUser(token.getUser());
                 response.setAuthSuccess(true);
                 response.setTokenUUID(token.getUuid());

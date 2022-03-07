@@ -1,5 +1,7 @@
 package Models;
 
+import Utils.Enums;
+
 import javax.persistence.*;
 
 @Entity
@@ -16,10 +18,15 @@ public class RegistrationNumberQuestionnaire {
     @Column(name = "QuestionnaireId", nullable = false)
     private Long questionnaireId;
 
-    public RegistrationNumberQuestionnaire(Long id, String registrationNum, Long questionnaireId) {
+    @Column(name = "CompletedLevel")
+    private Enums.CompletedLevel completedLevel;
+
+    public RegistrationNumberQuestionnaire(Long id, String registrationNum, Long questionnaireId,
+                                           Enums.CompletedLevel completedLevel) {
         this.id = id;
         this.registrationNum = registrationNum;
-        questionnaireId = questionnaireId;
+        this.questionnaireId = questionnaireId;
+        this.completedLevel = completedLevel;
     }
 
     public RegistrationNumberQuestionnaire() { }
@@ -46,5 +53,13 @@ public class RegistrationNumberQuestionnaire {
 
     public void setQuestionnaireId(Long questionnaireId) {
         this.questionnaireId = questionnaireId;
+    }
+
+    public Enums.CompletedLevel getCompletedLevel() {
+        return completedLevel;
+    }
+
+    public void setCompletedLevel(Enums.CompletedLevel completedLevel) {
+        this.completedLevel = completedLevel;
     }
 }

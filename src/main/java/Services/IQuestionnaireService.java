@@ -9,4 +9,6 @@ public interface IQuestionnaireService {
     QuestionnaireDTO deleteQuestionnaire(QuestionnaireDTO questionnaireDTO);
     QuestionnaireDTO saveAnswers(QuestionnaireDTO questionnaireDTO);
     QuestionnaireDTO getResult(QuestionnaireDTO questionnaireDTO);
+
+    QuestionnaireDTO getApiResponse();
 }

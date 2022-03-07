@@ -16,6 +16,9 @@ public interface UnionMembershipNumRepository extends CrudRepository<UnionMember
 
   List<UnionMembershipNumber> findAll();
 
+  @Query("SELECT u FROM UnionMembershipNumber u order by u.id")
+  List<UnionMembershipNumber> findAllOrderById();
+
   @Query("SELECT COUNT(id) FROM UnionMembershipNumber u where u.isActive = TRUE")
   Integer getNumberOfUnionMemberUsers();
 

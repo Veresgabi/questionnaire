@@ -33,14 +33,18 @@ public class ScaleQuestion {
     @Column(name = "ScaleMaxNum", nullable = false)
     private Integer scaleMaxNumber;
 
+    @Column(name = "completion")
+    private Integer completion;
+
     @Transient
-    private int completion;
+    private boolean isCompletedByCurrentUser;
 
     /* @OneToMany(cascade= CascadeType.ALL)
     @JoinColumn(name="Scale_Question_Id")
     @JsonIgnore
     private List<Answer> answers; */
 
+    @Column(name = "averageRate", length = 100)
     private String averageRate;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -50,7 +54,7 @@ public class ScaleQuestion {
 
     public ScaleQuestion(Long id, Integer number, Enums.Type type, boolean isUnionMembersOnly,
                          String question, Integer scaleMinNumber, Integer scaleMaxNumber,
-                         Questionnaire questionnaire, int completion, String averageRate) {
+                         Questionnaire questionnaire, boolean isCompletedByCurrentUser, int completion, String averageRate) {
         this.id = id;
         this.number = number;
         this.type = type;
@@ -61,6 +65,7 @@ public class ScaleQuestion {
         // this.answers = answers;
         this.questionnaire = questionnaire;
         this.completion = completion;
+        this.isCompletedByCurrentUser = isCompletedByCurrentUser;
         this.averageRate = averageRate;
     }
 
@@ -138,11 +143,19 @@ public class ScaleQuestion {
         this.questionnaire = questionnaire;
     }
 
-    public int getCompletion() {
+    public boolean isCompletedByCurrentUser() {
+        return isCompletedByCurrentUser;
+    }
+
+    public void setCompletedByCurrentUser(boolean completedByCurrentUser) {
+        isCompletedByCurrentUser = completedByCurrentUser;
+    }
+
+    public Integer getCompletion() {
         return completion;
     }
 
-    public void setCompletion(int completion) {
+    public void setCompletion(Integer completion) {
         this.completion = completion;
     }
 

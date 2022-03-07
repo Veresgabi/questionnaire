@@ -1,7 +1,9 @@
 package Controllers;
 
 import DTOs.ExcelDTO;
+import Models.UnionMembershipNumber;
 import Models.User;
+import Repositories.UnionMembershipNumRepository;
 import Services.IExcelService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,9 @@ public class ExcelController {
 
     @Autowired
     IExcelService excelService;
+
+    @Autowired
+    public UnionMembershipNumRepository unionMembershipNumRepository;
 
     @Transactional
     @PostMapping("/readFromExcel")
@@ -62,5 +67,11 @@ public class ExcelController {
         response.setHeader(headerKey, headerValue);
 
         excelService.downloadExcelTest(response);
+    }
+
+    @GetMapping("/testGetUnionMembers")
+    @ResponseBody
+    public List<UnionMembershipNumber> testGetUnionMembershipNumbers() {
+        return unionMembershipNumRepository.findAllOrderById();
     }
 }

@@ -15,6 +15,7 @@ import java.util.UUID;
 public interface TokenRepository extends CrudRepository<Token, Long> {
 
     List<Token> findAll();
+
     Token findByUuid(UUID uuid);
 
     @Modifying
