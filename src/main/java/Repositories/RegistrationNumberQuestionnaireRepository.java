@@ -23,4 +23,7 @@ public interface RegistrationNumberQuestionnaireRepository extends CrudRepositor
 
     @Query("select questionnaireId from RegistrationNumberQuestionnaire r where r.registrationNum = ?1 and r.completedLevel = 0")
     List<Long> findQuestionnaireIdsByRegistrationNumber(String userRegistrationNumber);
+
+    @Modifying
+    void deleteAll();
 }

@@ -2,6 +2,7 @@ package Repositories;
 
 import Models.RegistrationNumber;
 import Models.User;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -20,4 +21,7 @@ public interface RegNumberRepository extends CrudRepository<RegistrationNumber, 
 
     @Query("SELECT COUNT(id) FROM RegistrationNumber")
     Integer getNumberOfRecords();
+
+    @Modifying
+    void deleteAll();
 }

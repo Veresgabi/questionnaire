@@ -3,6 +3,7 @@ package Repositories;
 import Models.RegistrationNumber;
 import Models.UnionMembershipNumber;
 import Models.User;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
@@ -24,4 +25,7 @@ public interface UnionMembershipNumRepository extends CrudRepository<UnionMember
 
   @Query("SELECT COUNT(id) FROM UnionMembershipNumber")
   Integer getNumberOfRecords();
+
+  @Modifying
+  void deleteAll();
 }

@@ -1,6 +1,7 @@
 package Repositories;
 
 import Models.Questionnaire;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -33,4 +34,7 @@ public interface QuestionnaireRepository extends CrudRepository<Questionnaire, L
   Questionnaire getQuestionnaireById(Long id);
 
   void deleteById(Long id);
+
+  @Modifying
+  void deleteAll();
 }

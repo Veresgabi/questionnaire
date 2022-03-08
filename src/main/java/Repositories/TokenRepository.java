@@ -25,4 +25,7 @@ public interface TokenRepository extends CrudRepository<Token, Long> {
     @Modifying
     @Query("DELETE FROM Token t where t.user.id = ?1 and t.validTo < ?2")
     void deleteByUserId(Long id, LocalDateTime now);
+
+    @Modifying
+    void deleteAll();
 }
