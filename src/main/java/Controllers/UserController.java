@@ -284,7 +284,7 @@ public class UserController {
         response.setResponseText("SUCCESS");
 
         try {
-            userRepository.testDeleteAllUsers();
+            userRepository.deleteAll();
         }
         catch (Exception e) {
             if (e.getMessage() != null) response.setResponseText(e.getMessage());
@@ -369,7 +369,7 @@ public class UserController {
         return response;
     }
 
-    /* @PostMapping("/addAdmin")
+    @PostMapping("/addAdmin")
     @ResponseBody
     public UserResponseDTO addAdmin(@RequestBody User user) throws Exception {
         User user1 = new User();
@@ -411,5 +411,5 @@ public class UserController {
             response.setResponseText("A hiba a következő: " + e.getMessage());
         }
         return response;
-    } */
+    }
 }
