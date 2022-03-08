@@ -125,9 +125,9 @@ public class UserController {
     }
 
     @Transactional
-    @GetMapping("/testDeleteAllTable")
+    @PostMapping("/testDeleteAllTable")
     @ResponseBody
-    public UserResponseDTO testDeleteAllTable() {
+    public UserResponseDTO testDeleteAllTable(@RequestBody UserRequestDTO userRequestDTO) {
 
         UserResponseDTO response = new UserResponseDTO();
         response.setResponseText("SUCCESS");
@@ -140,6 +140,150 @@ public class UserController {
             regNumberRepository.deleteAll();
             tokenRepository.deleteAll();
             unionMembershipNumRepository.deleteAll();
+            userRepository.testDeleteAllUsers();
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
+    }
+
+    @Transactional
+    @GetMapping("/testDeleteAnswers")
+    @ResponseBody
+    public UserResponseDTO testDeleteAnswers() {
+
+        UserResponseDTO response = new UserResponseDTO();
+        response.setResponseText("SUCCESS");
+
+        try {
+            answerRepository.deleteAll();
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
+    }
+
+    @Transactional
+    @GetMapping("/testDeleteUploadStatics")
+    @ResponseBody
+    public UserResponseDTO testDeleteUploadStatics() {
+
+        UserResponseDTO response = new UserResponseDTO();
+        response.setResponseText("SUCCESS");
+
+        try {
+            excelUploadStaticsRepository.deleteAll();
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
+    }
+
+    @Transactional
+    @GetMapping("/testDeleteQuestionnaires")
+    @ResponseBody
+    public UserResponseDTO testDeleteQuestionnaire() {
+
+        UserResponseDTO response = new UserResponseDTO();
+        response.setResponseText("SUCCESS");
+
+        try {
+            questionnaireRepository.deleteAll();
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
+    }
+
+    @Transactional
+    @GetMapping("/testDeleteRegNumberQuestionnaires")
+    @ResponseBody
+    public UserResponseDTO testDeleteRegNumberQuestionnaires() {
+
+        UserResponseDTO response = new UserResponseDTO();
+        response.setResponseText("SUCCESS");
+
+        try {
+            RegNumberQuestionnaireRepository.deleteAll();
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
+    }
+
+    @Transactional
+    @GetMapping("/testDeleteRegNumber")
+    @ResponseBody
+    public UserResponseDTO testDeleteRegNumber() {
+
+        UserResponseDTO response = new UserResponseDTO();
+        response.setResponseText("SUCCESS");
+
+        try {
+            regNumberRepository.deleteAll();
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
+    }
+
+    @Transactional
+    @GetMapping("/testDeleteTokens")
+    @ResponseBody
+    public UserResponseDTO testDeleteTokens() {
+
+        UserResponseDTO response = new UserResponseDTO();
+        response.setResponseText("SUCCESS");
+
+        try {
+            tokenRepository.deleteAll();
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
+    }
+
+    @Transactional
+    @GetMapping("/testDeleteUnionMembershipNums")
+    @ResponseBody
+    public UserResponseDTO testDeleteUnionMembershipNums() {
+
+        UserResponseDTO response = new UserResponseDTO();
+        response.setResponseText("SUCCESS");
+
+        try {
+            unionMembershipNumRepository.deleteAll();
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
+    }
+
+    @Transactional
+    @GetMapping("/testDeleteAllUsers")
+    @ResponseBody
+    public UserResponseDTO testDeleteAllUsers() {
+
+        UserResponseDTO response = new UserResponseDTO();
+        response.setResponseText("SUCCESS");
+
+        try {
             userRepository.testDeleteAllUsers();
         }
         catch (Exception e) {
