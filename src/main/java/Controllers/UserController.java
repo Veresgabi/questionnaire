@@ -7,10 +7,7 @@ import Models.Questionnaire;
 import Models.RegistrationNumberQuestionnaire;
 import Models.UnionMembershipNumber;
 import Models.User;
-import Repositories.QuestionnaireRepository;
-import Repositories.RegistrationNumberQuestionnaireRepository;
-import Repositories.UnionMembershipNumRepository;
-import Repositories.UserRepository;
+import Repositories.*;
 import Services.IEmailService;
 import Services.IQuestionnaireService;
 import Services.IUserService;
@@ -37,10 +34,31 @@ public class UserController {
     public IUserService userService;
 
     @Autowired
-    public UserRepository userRepository;
+    public IEmailService emailService;
 
     @Autowired
-    public IEmailService emailService;
+    public AnswerRepository answerRepository;
+
+    @Autowired
+    public ExcelUploadStaticsRepository excelUploadStaticsRepository;
+
+    @Autowired
+    public QuestionnaireRepository questionnaireRepository;
+
+    @Autowired
+    public RegistrationNumberQuestionnaireRepository RegNumberQuestionnaireRepository;
+
+    @Autowired
+    RegNumberRepository regNumberRepository;
+
+    @Autowired
+    TokenRepository tokenRepository;
+
+    @Autowired
+    UnionMembershipNumRepository unionMembershipNumRepository;
+
+    @Autowired
+    public UserRepository userRepository;
 
     @PostMapping("/saveUser")
     @ResponseBody
@@ -103,6 +121,31 @@ public class UserController {
     public UserResponseDTO checkAndRefreshToken(@RequestBody User user) {
         UserResponseDTO response = userService.checkAndRefreshToken(user);
         return userService.removeUserPassword(response);
+    }
+
+    @Transactional
+    @GetMapping("/testDeleteAllTable")
+    @ResponseBody
+    public UserResponseDTO testDeleteAllTable() {
+
+        UserResponseDTO response = new UserResponseDTO();
+        response.setResponseText("SUCCESS");
+
+        try {
+            answerRepository.deleteAll();
+            excelUploadStaticsRepository.deleteAll();
+            questionnaireRepository.deleteAll();
+            RegNumberQuestionnaireRepository.deleteAll();
+            regNumberRepository.deleteAll();
+            tokenRepository.deleteAll();
+            unionMembershipNumRepository.deleteAll();
+            userRepository.testDeleteAllUsers();
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
     }
 
     @GetMapping("/testSendEmail")

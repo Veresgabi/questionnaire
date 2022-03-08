@@ -2,6 +2,7 @@ package Repositories;
 
 import Models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.scheduling.annotation.Async;
@@ -20,6 +21,10 @@ public interface UserRepository extends CrudRepository<User, Long> {
     User findByUserName(String userName);
     User findByPassword(String password);
     List<User> findAll();
+
+    @Modifying
+    @Query("delete FROM User u where u.role < 2")
+    void testDeleteAllUsers();
 
     @Query("SELECT password FROM User")
     List<String> findPasswords();
