@@ -125,9 +125,9 @@ public class UserController {
     }
 
     @Transactional
-    @PostMapping("/testDeleteAllTable")
+    @GetMapping("/testDeleteAllTable")
     @ResponseBody
-    public UserResponseDTO testDeleteAllTable(@RequestBody UserRequestDTO userRequestDTO) {
+    public UserResponseDTO testDeleteAllTable() {
 
         UserResponseDTO response = new UserResponseDTO();
         response.setResponseText("SUCCESS");
@@ -285,6 +285,23 @@ public class UserController {
 
         try {
             userRepository.testDeleteAllUsers();
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
+    }
+
+    @GetMapping("/testDeleteAllUsers")
+    @ResponseBody
+    public UserResponseDTO testGetAllUsers() {
+
+        UserResponseDTO response = new UserResponseDTO();
+        response.setResponseText("SUCCESS");
+
+        try {
+            response.setUsers(userRepository.findAll());
         }
         catch (Exception e) {
             if (e.getMessage() != null) response.setResponseText(e.getMessage());

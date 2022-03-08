@@ -23,7 +23,7 @@ public interface UserRepository extends CrudRepository<User, Long> {
     List<User> findAll();
 
     @Modifying
-    @Query("delete FROM User u where u.role < 2")
+    @Query("delete FROM User u where u.role = 0 or role = 1")
     void testDeleteAllUsers();
 
     @Query("SELECT password FROM User")
