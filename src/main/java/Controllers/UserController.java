@@ -14,9 +14,10 @@ import Services.IUserService;
 import Utils.Enums;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
+
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -123,6 +124,7 @@ public class UserController {
         return userService.removeUserPassword(response);
     }
 
+    @Transactional
     @GetMapping("/testDeleteAllTable")
     @ResponseBody
     public UserResponseDTO testDeleteAllTable() {
@@ -131,25 +133,20 @@ public class UserController {
         response.setResponseText("SUCCESS");
 
         try {
-            testDeleteFromAllTable();
+            answerRepository.deleteAll();
+            excelUploadStaticsRepository.deleteAll();
+            questionnaireRepository.deleteAll();
+            RegNumberQuestionnaireRepository.deleteAll();
+            regNumberRepository.deleteAll();
+            tokenRepository.deleteAll();
+            unionMembershipNumRepository.deleteAll();
+            userRepository.testDeleteAllUsers();
         }
         catch (Exception e) {
             if (e.getMessage() != null) response.setResponseText(e.getMessage());
             else response.setResponseText(e.toString());
         }
         return response;
-    }
-
-    @Transactional
-    private void testDeleteFromAllTable() {
-        answerRepository.deleteAll();
-        excelUploadStaticsRepository.deleteAll();
-        questionnaireRepository.deleteAll();
-        RegNumberQuestionnaireRepository.deleteAll();
-        regNumberRepository.deleteAll();
-        tokenRepository.deleteAll();
-        unionMembershipNumRepository.deleteAll();
-        userRepository.testDeleteAllUsers();
     }
 
     @GetMapping("/testSendEmail")
@@ -174,7 +171,7 @@ public class UserController {
 
     @PostMapping("/transTest")
     @ResponseBody
-    @Transactional(rollbackFor = Exception.class)
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public UserResponseDTO transactionTest(@RequestBody User user) throws Exception {
         User userWithoutRegNum = new User();
         userWithoutRegNum.setUserName("userWithoutRegNum");
