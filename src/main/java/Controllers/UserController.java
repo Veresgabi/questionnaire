@@ -140,7 +140,7 @@ public class UserController {
             regNumberRepository.deleteAll();
             tokenRepository.deleteAll();
             unionMembershipNumRepository.deleteAll();
-            userRepository.testDeleteAllUsers();
+            userRepository.deleteAll();
         }
         catch (Exception e) {
             if (e.getMessage() != null) response.setResponseText(e.getMessage());
