@@ -293,7 +293,7 @@ public class UserController {
         return response;
     }
 
-    @GetMapping("/testDeleteAllUsers")
+    @GetMapping("/testGetAllUsers")
     @ResponseBody
     public UserResponseDTO testGetAllUsers() {
 
