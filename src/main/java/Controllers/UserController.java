@@ -123,7 +123,6 @@ public class UserController {
         return userService.removeUserPassword(response);
     }
 
-    @Transactional
     @GetMapping("/testDeleteAllTable")
     @ResponseBody
     public UserResponseDTO testDeleteAllTable() {
@@ -132,20 +131,25 @@ public class UserController {
         response.setResponseText("SUCCESS");
 
         try {
-            answerRepository.deleteAll();
-            excelUploadStaticsRepository.deleteAll();
-            questionnaireRepository.deleteAll();
-            RegNumberQuestionnaireRepository.deleteAll();
-            regNumberRepository.deleteAll();
-            tokenRepository.deleteAll();
-            unionMembershipNumRepository.deleteAll();
-            userRepository.testDeleteAllUsers();
+            testDeleteFromAllTable();
         }
         catch (Exception e) {
             if (e.getMessage() != null) response.setResponseText(e.getMessage());
             else response.setResponseText(e.toString());
         }
         return response;
+    }
+
+    @Transactional
+    private void testDeleteFromAllTable() {
+        answerRepository.deleteAll();
+        excelUploadStaticsRepository.deleteAll();
+        questionnaireRepository.deleteAll();
+        RegNumberQuestionnaireRepository.deleteAll();
+        regNumberRepository.deleteAll();
+        tokenRepository.deleteAll();
+        unionMembershipNumRepository.deleteAll();
+        userRepository.testDeleteAllUsers();
     }
 
     @GetMapping("/testSendEmail")
