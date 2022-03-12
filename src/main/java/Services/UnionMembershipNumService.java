@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,7 +28,7 @@ public class UnionMembershipNumService implements IUnionMembershipNumService {
   public ExcelUploadStaticsRepository excelUploadStaticsRepository;
 
   public ExcelUploadStatics saveNumberWithCheck(Map<Integer, List<UnionMembershipNumber>> unMembNumbers, String originalFileName) {
-    List<UnionMembershipNumber> insertedUnMembNumbers = new ArrayList<>();
+    Map<String, UnionMembershipNumber> insertedUnMembNumbers = new HashMap<>();
     List<UnionMembershipNumber> inactivatedUnMembNumbers = new ArrayList<>();
 
     List<UnionMembershipNumber> allUnMembNumbers = unionMembershipNumRepo.findAll();
@@ -46,7 +47,7 @@ public class UnionMembershipNumService implements IUnionMembershipNumService {
 
         if (sameUnMembNum == null) {
           unionNum.setActive(true);
-          insertedUnMembNumbers.add(unionNum);
+          insertedUnMembNumbers.put(unionNum.getUnionMembershipNum(), unionNum);
         }
         else {
           sameUnMembNum.setNeedToInactivate(false);
@@ -68,19 +69,19 @@ public class UnionMembershipNumService implements IUnionMembershipNumService {
             sameUnMembNum.setActive(true);
             sameUnMembNum.setRegistrationNumber(unionNum.getRegistrationNumber());
 
-            insertedUnMembNumbers.add(sameUnMembNum);
+            insertedUnMembNumbers.put(sameUnMembNum.getUnionMembershipNum(), sameUnMembNum);
           }
 
           if (sameUnMembNum.getRegistrationNumber() == null && unionNum.getRegistrationNumber() != null) {
             sameUnMembNum.setRegistrationNumber(unionNum.getRegistrationNumber());
-            insertedUnMembNumbers.add(sameUnMembNum);
+            insertedUnMembNumbers.put(sameUnMembNum.getUnionMembershipNum(), sameUnMembNum);
           }
         }
       }
     }
-    inactivatedUnMembNumbers = allUnMembNumbers.stream().filter(rn -> rn.isNeedToInactivate()).collect(Collectors.toList());
+    inactivatedUnMembNumbers = allUnMembNumbers.stream().filter(un -> un.isNeedToInactivate()).collect(Collectors.toList());
 
-    if (!insertedUnMembNumbers.isEmpty()) unionMembershipNumRepo.saveAll(insertedUnMembNumbers);
+    if (!insertedUnMembNumbers.isEmpty()) unionMembershipNumRepo.saveAll(insertedUnMembNumbers.values());
 
     if (!inactivatedUnMembNumbers.isEmpty()) {
       for (UnionMembershipNumber un : inactivatedUnMembNumbers) {

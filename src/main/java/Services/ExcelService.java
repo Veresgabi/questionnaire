@@ -134,16 +134,12 @@ public class ExcelService implements IExcelService {
                     UnionMembershipNumber unionMembershipNumber = new UnionMembershipNumber();
                     for (Cell cell : row) {
                         cellCounter++;
+
+                        // String Cell values
                         try {
                             String cellValue = cell.getStringCellValue();
                             // Ignore empty cells:
-                            if (cellValue.isEmpty()) {
-                                if (forUnionMembers) {
-                                    if (cellCounter == 0) continue;
-                                    else if (cellCounter == 1) break;
-                                }
-                                else break;
-                            }
+                            if (cellValue.isEmpty()) break;
                             else {
                                 // Check can we parse the item to Long. If can, add to the value Map.
                                 Long.parseLong(cellValue);
@@ -166,94 +162,68 @@ public class ExcelService implements IExcelService {
                             }
                         }
                         catch (Exception e) {
-                            if (e.getClass().equals(NumberFormatException.class)) {
-                                if (forUnionMembers) {
-                                    if (cellCounter == 0) continue;
-                                    else if (cellCounter == 1) break;
-                                }
-                                else break;
+                            if (!e.getClass().equals(IllegalStateException.class)
+                                    && !e.getClass().equals(NumberFormatException.class)) {
+                                throw e;
                             }
                         }
-                        try {
-                            if (DateUtil.isCellDateFormatted(cell)) {
-                                if (forUnionMembers) {
-                                    if (cellCounter == 0) {
-                                        unionMembershipNumber.setRegistrationNumber(cell.getDateCellValue() + "");
-                                        dataRegNums.get(sheetName).add(cell.getDateCellValue() + "");
-                                        continue;
-                                    }
-                                    else if (cellCounter == 1) {
-                                        unionMembershipNumber.setUnionMembershipNum(cell.getDateCellValue() + "");
-                                        dataUnionMembNums.get(i).add(unionMembershipNumber);
-                                        break;
-                                    }
-                                }
-                                else {
-                                    dataRegNums.get(sheetName).add(cell.getDateCellValue() + "");
-                                    break;
-                                }
 
-                            } else {
-                                Long numericValue = (long) cell.getNumericCellValue();
-                                if (forUnionMembers) {
-                                    if (cellCounter == 0) {
-                                        unionMembershipNumber.setRegistrationNumber(numericValue.toString());
-                                        dataRegNums.get(sheetName).add(numericValue.toString());
-                                        continue;
-                                    }
-                                    else if (cellCounter == 1) {
-                                        unionMembershipNumber.setUnionMembershipNum(numericValue.toString());
-                                        dataUnionMembNums.get(i).add(unionMembershipNumber);
-                                        break;
-                                    }
-                                }
-                                else {
-                                    dataRegNums.get(sheetName).add(numericValue.toString());
-                                    break;
-                                }
-                            }
-                        }
-                        catch (IllegalStateException e) { }
-
+                        // Numeric Cell values
                         try {
+                            Long numericValue = (long) cell.getNumericCellValue();
                             if (forUnionMembers) {
                                 if (cellCounter == 0) {
-                                    unionMembershipNumber.setRegistrationNumber(cell.getBooleanCellValue() + "");
-                                    dataRegNums.get(sheetName).add(cell.getBooleanCellValue() + "");
+                                    unionMembershipNumber.setRegistrationNumber(numericValue.toString());
+                                    dataRegNums.get(sheetName).add(numericValue.toString());
                                     continue;
                                 }
                                 else if (cellCounter == 1) {
-                                    unionMembershipNumber.setUnionMembershipNum(cell.getBooleanCellValue() + "");
+                                    unionMembershipNumber.setUnionMembershipNum(numericValue.toString());
                                     dataUnionMembNums.get(i).add(unionMembershipNumber);
                                     break;
                                 }
                             }
                             else {
-                                dataRegNums.get(sheetName).add(cell.getBooleanCellValue() + "");
+                                dataRegNums.get(sheetName).add(numericValue.toString());
                                 break;
                             }
                         }
                         catch (IllegalStateException e) { }
 
+                        // Cell formula values
                         try {
                             if (forUnionMembers) {
                                 if (cellCounter == 0) {
+                                    // try to parse it to number
+                                    Long.parseLong(cell.getCellFormula() + "");
+
                                     unionMembershipNumber.setRegistrationNumber(cell.getCellFormula() + "");
                                     dataRegNums.get(sheetName).add(cell.getCellFormula() + "");
                                     continue;
                                 }
                                 else if (cellCounter == 1) {
+                                    // try to parse it to number
+                                    Long.parseLong(cell.getCellFormula() + "");
+
                                     unionMembershipNumber.setUnionMembershipNum(cell.getCellFormula() + "");
                                     dataUnionMembNums.get(i).add(unionMembershipNumber);
                                     break;
                                 }
                             }
                             else {
+                                // try to parse it to number
+                                Long.parseLong(cell.getCellFormula() + "");
+
                                 dataRegNums.get(sheetName).add(cell.getCellFormula() + "");
                                 break;
                             }
                         }
-                        catch (IllegalStateException e) { }
+                        catch (Exception e) {
+                            if (!e.getClass().equals(IllegalStateException.class)
+                                    && !e.getClass().equals(NumberFormatException.class)) {
+                                throw e;
+                            }
+                        }
                     }
                 }
             }

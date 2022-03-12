@@ -13,9 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,7 +30,7 @@ public class RegistrationNumberService implements IRegistrationNumberService {
 
     public ExcelUploadStatics saveNumberWithCheck(Map<String, List<String>> regNumbers, String originalFileName, boolean needToInactivate) {
 
-        List<RegistrationNumber> insertedRegNumbers = new ArrayList<>();
+        HashMap<String, RegistrationNumber> insertedRegNumbers = new HashMap<>();
         List<RegistrationNumber> inactivatedRegNumbers = new ArrayList<>();
 
         List<RegistrationNumber> allRegNumbers = regNumberRepository.findAll();
@@ -61,7 +59,7 @@ public class RegistrationNumberService implements IRegistrationNumberService {
                     registrationNumber.setFirstName("");
                     registrationNumber.setLastName("");
                     registrationNumber.setLocation(location);
-                    insertedRegNumbers.add(registrationNumber);
+                    insertedRegNumbers.put(regNum, registrationNumber);
                 }
                 else {
                     sameRegNum.setNeedToInactivate(false);
@@ -69,7 +67,7 @@ public class RegistrationNumberService implements IRegistrationNumberService {
 
                     if (!sameRegNum.isActive()) {
                         sameRegNum.setActive(true);
-                        insertedRegNumbers.add(sameRegNum);
+                        insertedRegNumbers.put(sameRegNum.getRegistrationNum(), sameRegNum);
                     }
                 }
             }
@@ -78,7 +76,7 @@ public class RegistrationNumberService implements IRegistrationNumberService {
             inactivatedRegNumbers = allRegNumbers.stream().filter(rn -> rn.isNeedToInactivate()).collect(Collectors.toList());
         }
 
-        if (!insertedRegNumbers.isEmpty()) regNumberRepository.saveAll(insertedRegNumbers);
+        if (!insertedRegNumbers.isEmpty()) regNumberRepository.saveAll(insertedRegNumbers.values());
 
         List<User> usersToDelete = new ArrayList<>();
         List<UnionMembershipNumber> unionMembNumsToInactive = new ArrayList<>();
