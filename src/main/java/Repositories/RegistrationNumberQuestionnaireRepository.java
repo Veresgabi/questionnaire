@@ -12,6 +12,8 @@ import java.util.List;
 @Repository
 public interface RegistrationNumberQuestionnaireRepository extends CrudRepository<RegistrationNumberQuestionnaire, Long> {
 
+    List<RegistrationNumberQuestionnaire> findAll();
+
     @Query("SELECT r FROM RegistrationNumberQuestionnaire r where r.registrationNum = ?1 and r.questionnaireId = ?2")
     List<RegistrationNumberQuestionnaire> findByRegNumberAndQuestionnaireId(String regNumber, Long questionnaireId);
 

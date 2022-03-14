@@ -310,6 +310,35 @@ public class UserController {
         return response;
     }
 
+    @GetMapping("/testShowAnswers")
+    @ResponseBody
+    public QuestionnaireDTO testShowAnswers() {
+        QuestionnaireDTO response = new QuestionnaireDTO();
+        response.setResponseText("SUCCESS");
+
+        try {
+            response.setAnswers(answerRepository.findAll());
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
+    }
+
+    @GetMapping("/testShowRegNumbQuestionnaires")
+    @ResponseBody
+    public List<RegistrationNumberQuestionnaire> testShowRegNumbQuestionnaires() {
+        List<RegistrationNumberQuestionnaire> response = new ArrayList<>();
+
+        try {
+            response = RegNumberQuestionnaireRepository.findAll();
+        }
+        catch (Exception e) { }
+
+        return response;
+    }
+
     @GetMapping("/testSendEmail")
     @ResponseBody
     public UserResponseDTO testSendEmail() {

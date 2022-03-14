@@ -12,6 +12,7 @@ import java.util.List;
 
 public interface AnswerRepository extends CrudRepository<Answer, Long> {
 
+  List<Answer> findAll();
   List<Answer> findByTextualQuestionId(Long textualQuestionId);
   List<Answer> findByScaleQuestionId(Long scaleQuestionId);
   List<Answer> findByChoiceQuestionId(Long choiceQuestionId);
