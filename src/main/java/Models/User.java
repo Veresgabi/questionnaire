@@ -23,6 +23,12 @@ public class User {
     @Column(name = "LastName", length = 100)
     private String lastName;
 
+    @Column(name = "email", nullable = false, length = 100)
+    private String email;
+
+    @Column(name = "enabled")
+    private boolean enabled;
+
     @Column(name = "UserName", nullable = false, length = 100)
     private String userName;
 
@@ -51,14 +57,16 @@ public class User {
 
     public User() {  }
 
-    public User(Long id, String firstName, String lastName, String userName, String password,
-                Enums.Role role, String registrationNum, String unionMembershipNum, boolean privacyStatement,
-                List<Token> tokens, UUID tokenUUID) {
+    public User(Long id, String firstName, String lastName, String userName, String password, String email,
+                boolean enabled, Enums.Role role, String registrationNum, String unionMembershipNum,
+                boolean privacyStatement, List<Token> tokens, UUID tokenUUID) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.userName = userName;
         this.password = password;
+        this.email = email;
+        this.enabled = enabled;
         this.role = role;
         this.registrationNum = registrationNum;
         this.unionMembershipNum = unionMembershipNum;
@@ -101,6 +109,22 @@ public class User {
 
     public String getPassword() {
         return password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public void setPassword(String password) {

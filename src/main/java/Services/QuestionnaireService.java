@@ -52,6 +52,7 @@ public class QuestionnaireService implements IQuestionnaireService {
         return apiResponse;
     }
 
+    @Transactional
     public QuestionnaireDTO saveQuestionnaire(QuestionnaireDTO questionnaireDTO) {
         QuestionnaireDTO response = new QuestionnaireDTO();
 
@@ -193,6 +194,7 @@ public class QuestionnaireService implements IQuestionnaireService {
         questionnaire.setLastModified(LocalDateTime.now());
 
         try {
+            boolean needToDeleteAnswers = false;
             if (questionnaire.isStateChange() && questionnaire.getState() == Enums.State.PUBLISHED) {
 
                 String deadlineString = questionnaire.getFormattedDeadline().replace("-", ".") + " 23:59";
@@ -212,11 +214,7 @@ public class QuestionnaireService implements IQuestionnaireService {
                 if (!response.isSuccessful()) return response;
 
                 questionnaire = response.getQuestionnaire();
-
-                try {
-                    deleteAnswers(questionnaire);
-                }
-                catch (Exception e) { }
+                needToDeleteAnswers = true;
             }
             boolean invalidTitle = false;
             List<Questionnaire> queriedQuestionnaires = questionnaireRepository.findQuestionnaireByTitle(questionnaire.getTitle());
@@ -235,6 +233,14 @@ public class QuestionnaireService implements IQuestionnaireService {
             }
 
             response.setQuestionnaire(questionnaireRepository.save(questionnaire));
+            if (needToDeleteAnswers) {
+                try {
+                    deleteAnswers(questionnaire);
+                }
+                catch (Exception e) {
+                    Exception excp = e;
+                }
+            }
             if (isEditMode) {
                 response.setQuestionnaireList(questionnaireRepository.findAllOrderByLastModDesc());
             }

@@ -375,8 +375,10 @@ public class UserController {
         User user1 = new User();
         user1.setUserName("Admin");
         user1.setPassword(encrypt("admin123"));
+        user1.setEmail("adminEmail");
+        user1.setEnabled(true);
         user1.setPrivacyStatement(true);
-        user1.setRegistrationNum("1a");
+        user1.setRegistrationNum("1eqzsfaq342e24w542");
         user1.setRole(Enums.Role.ADMIN);
 
         UserResponseDTO response = new UserResponseDTO();
@@ -397,8 +399,10 @@ public class UserController {
         User user1 = new User();
         user1.setUserName("AdminSzakszerv");
         user1.setPassword(encrypt("admin456"));
+        user1.setEmail("adminSzakszervEmail");
+        user1.setEnabled(true);
         user1.setPrivacyStatement(true);
-        user1.setRegistrationNum("1b");
+        user1.setRegistrationNum("1q35sgsafw4z4ays");
         user1.setRole(Enums.Role.UNION_MEMBER_ADMIN);
 
         UserResponseDTO response = new UserResponseDTO();

@@ -29,6 +29,7 @@ public class UserService implements IUserService {
     private final String errorSendUnionNumber = "A szakszervezeti regisztrációs szám megadása sikertelen a következő hiba miatt: ";
     private final String userNameOrPasswordExists = "A megadott felhasználónév vagy jelszó már " +
             "létezik. ";
+    private final String emailExists = "A megadott email cím már létezik. ";
     private final String invalidUserNameOrPasswordLogin = "Helytelen felhasználónév vagy jelszó!";
     private final String invalidPassword = "Az Ön által megadott jelenlegi jelszó nem megfelelő.";
     private final String invalidNewPassword = "Az Ön által megadott új jelszó nem megfelelő.";
@@ -80,6 +81,13 @@ public class UserService implements IUserService {
         if (response.isValidUser() && response.getResponseText().isEmpty()) {
             Token token = tokenService.createToken(Enums.Role.USER);
             user.setTokens(Arrays.asList(token));
+
+            // -----------------------------------------------------
+            // Remove the first row below when e-mail confirmation process is developed
+            // -----------------------------------------------------
+            user.setEnabled(true);
+            // -----------------------------------------------------
+
             if (!user.getUnionMembershipNum().isEmpty()) user.setRole(Enums.Role.UNION_MEMBER_USER);
             else user.setRole(Enums.Role.USER);
 
@@ -122,18 +130,16 @@ public class UserService implements IUserService {
 
         try {
             User foundUser = userRepository.findByUserName(user.getUserName());
-            if (foundUser != null) {
-                if (foundUser.getPassword().equals(encrypt(user.getPassword()))) {
+            if (foundUser != null && foundUser.isEnabled()
+                    && foundUser.getPassword().equals(encrypt(user.getPassword()))) {
 
-                    Token token = tokenService.createToken(foundUser.getRole());
-                    foundUser.tokensAdd(token);
-                    userRepository.save(foundUser);
+                Token token = tokenService.createToken(foundUser.getRole());
+                foundUser.tokensAdd(token);
+                userRepository.save(foundUser);
 
-                    tokenRepository.deleteByUserId(foundUser.getId(), LocalDateTime.now());
-                    response.setTokenUUID(token.getUuid());
-                    response.setResponseText(successfulLogin);
-                }
-                else response.setValidUser(false);
+                tokenRepository.deleteByUserId(foundUser.getId(), LocalDateTime.now());
+                response.setTokenUUID(token.getUuid());
+                response.setResponseText(successfulLogin);
             }
             else response.setValidUser(false);
         }
@@ -235,6 +241,11 @@ public class UserService implements IUserService {
             else if (userRepository.findByUserName(user.getUserName()) != null) {
                 response.setValidUser(false);
                 response.setResponseText(userNameOrPasswordExists);
+                return response;
+            }
+            else if (userRepository.findByEmail(user.getEmail()) != null) {
+                response.setValidUser(false);
+                response.setResponseText(emailExists);
                 return response;
             }
 
