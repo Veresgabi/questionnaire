@@ -1,6 +1,7 @@
 package Repositories;
 
 import Models.RegistrationNumber;
+import Models.UnionMembershipNumber;
 import Models.User;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +16,9 @@ public interface RegNumberRepository extends CrudRepository<RegistrationNumber, 
     RegistrationNumber findByRegistrationNum(String registrationNum);
 
     List<RegistrationNumber> findAll();
+
+    @Query("SELECT r FROM RegistrationNumber r order by r.id")
+    List<RegistrationNumber> findAllOrderById();
 
     @Query("SELECT COUNT(id) FROM RegistrationNumber r where r.isActive = TRUE")
     Integer getNumberOfUsers();

@@ -1,8 +1,10 @@
 package Controllers;
 
 import DTOs.ExcelDTO;
+import Models.RegistrationNumber;
 import Models.UnionMembershipNumber;
 import Models.User;
+import Repositories.RegNumberRepository;
 import Repositories.UnionMembershipNumRepository;
 import Services.IExcelService;
 
@@ -27,6 +29,9 @@ public class ExcelController {
 
     @Autowired
     public UnionMembershipNumRepository unionMembershipNumRepository;
+
+    @Autowired
+    public RegNumberRepository regNumberRepository;
 
     @Transactional
     @PostMapping("/readFromExcel")
@@ -73,5 +78,11 @@ public class ExcelController {
     @ResponseBody
     public List<UnionMembershipNumber> testGetUnionMembershipNumbers() {
         return unionMembershipNumRepository.findAllOrderById();
+    }
+
+    @GetMapping("/testGetRegistrationNumbers")
+    @ResponseBody
+    public List<RegistrationNumber> testGetRegistrationNumbers() {
+        return regNumberRepository.findAllOrderById();
     }
 }
