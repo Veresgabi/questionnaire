@@ -1,6 +1,7 @@
 package Services;
 
 import DTOs.AbstractDTO;
+import DTOs.QuestionnaireDTO;
 import DTOs.UserRequestDTO;
 import DTOs.UserResponseDTO;
 import Models.*;
@@ -12,9 +13,11 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.MissingResourceException;
+import java.util.stream.Collectors;
 
 import static Services.PasswordEncrypter.encrypt;
 
@@ -61,7 +64,16 @@ public class UserService implements IUserService {
     public ITokenService tokenService;
     @Autowired
     public RegistrationNumberQuestionnaireRepository regNumQuestRepository;
+    @Autowired
+    public EmailService emailService;
 
+    private UserResponseDTO apiResponse;
+
+    public UserResponseDTO getApiResponse() {
+        return apiResponse;
+    }
+
+    @Transactional
     public UserResponseDTO saveUser(User user) throws Exception {
 
         UserResponseDTO response;
@@ -75,17 +87,36 @@ public class UserService implements IUserService {
             }
             else if (!response.isSuccessful()) return response;
         }
+        try {
+            List<User> disabledUsers = userRepository.getExpiredUsers();
+            List<User> deletedUsers = disabledUsers
+                    .stream()
+                    .filter(u -> u.getTokens()
+                            .stream()
+                            .filter(token -> !LocalDateTime.now().isAfter(token.getValidTo()))
+                            .collect(Collectors.toList()).isEmpty())
+                    .collect(Collectors.toList());
+            userRepository.deleteAll(deletedUsers);
+        }
+        catch (Exception e) {
+            response = new UserResponseDTO();
+            if (e.getMessage() != null)
+                response.setResponseText(errorRegistration + e.getMessage());
+            else response.setResponseText(errorRegistration + e);
+            apiResponse = response;
 
+            throw e;
+        }
         response = validateNewUser(user);
 
         if (response.isValidUser() && response.getResponseText().isEmpty()) {
-            Token token = tokenService.createToken(Enums.Role.USER);
+            Token token = tokenService.createToken(Enums.Role.USER, 1);
             user.setTokens(Arrays.asList(token));
 
             // -----------------------------------------------------
             // Remove the first row below when e-mail confirmation process is developed
             // -----------------------------------------------------
-            user.setEnabled(true);
+            // user.setEnabled(true);
             // -----------------------------------------------------
 
             if (!user.getUnionMembershipNum().isEmpty()) user.setRole(Enums.Role.UNION_MEMBER_USER);
@@ -94,16 +125,43 @@ public class UserService implements IUserService {
             try {
                 user.setPassword(encrypt(user.getPassword()));
                 User savedUser = userRepository.save(user);
+
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
+                String tokenExpireTime = token.getValidTo().format(formatter);
+
+                String text = "Kedves " + user.getUserName() + "!" +
+                        "\n\nA gszsz.hu kérdőív kitöltő alkalmazásán történt regisztrációjának megerősítése érdekében " +
+                        "kérjük, kattintson a következő linkre: " +
+                        "http://localhost:8080/user/confirmRegistration?id=" + token.getUuid() +
+                        "\nTájékoztatjuk, hogy a regisztráció megerősítésére a következő időpontig van lehetősége: " +
+                        tokenExpireTime + "." +
+                        "\n\nÜdvözlettel: Gumiipari Szakszervezeti Szövetség";
+
+                emailService.sendSimpleMessage(user.getEmail(), "Regisztráció megerősítése", text);
+
                 if (savedUser != null) {
                     response.setResponseText(success);
-                    response.setTokenUUID(user.getTokens().get(0).getUuid());
+                    // response.setTokenUUID(user.getTokens().get(0).getUuid());
                 }
             }
             catch (Exception e) {
                 response.setSuccessful(false);
-                if (e.getMessage() != null)
-                    response.setResponseText(errorRegistration + e.getMessage());
-                else response.setResponseText(errorRegistration + e);
+                String errorMessage = "";
+                if (e.getMessage() != null) errorMessage = e.getMessage();
+                else errorMessage = e.toString();
+
+                if (errorMessage.contains("Failed messages") && errorMessage.contains("SendFailedException: Invalid Addresses"))
+                    response.setResponseText(errorRegistration + "Az Ön által megadott e-mail cím nem megfelelő.");
+                else if (errorMessage.contains("Mail server connection failed") && errorMessage.contains("MailConnectException: Couldn't connect to host"))
+                    response.setResponseText(errorRegistration + "A server nem elérhető, kérjük, ellenőrizze internet kapcsolatát.");
+                else if (errorMessage.contains("Authentication failed") && errorMessage.contains("AuthenticationFailedException")
+                        && errorMessage.contains("Username and Password not accepted"))
+                    response.setResponseText(errorRegistration + "Az e-mail server hitelesítése nem sikerült.");
+                else response.setResponseText(errorRegistration + errorMessage);
+
+                apiResponse = response;
+
+                throw e;
             }
         }
         return response;

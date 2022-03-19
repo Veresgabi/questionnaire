@@ -28,4 +28,8 @@ public interface TokenRepository extends CrudRepository<Token, Long> {
 
     @Modifying
     void deleteAll();
+
+    @Modifying
+    @Query("Update Token t set t.validTo = ?1")
+    void testExpireTokens(LocalDateTime now);
 }

@@ -63,9 +63,25 @@ public class UserController {
 
     @PostMapping("/saveUser")
     @ResponseBody
-    public UserResponseDTO saveUser(@RequestBody User user) throws Exception {
-        UserResponseDTO response = userService.saveUser(user);
-        return userService.removeUserPassword(response);
+    public UserResponseDTO saveUser(@RequestBody User user) {
+        UserResponseDTO response = new UserResponseDTO();
+
+        try {
+            response = userService.saveUser(user);
+        }
+        catch (Exception e) {
+            if (userService.getApiResponse() != null) {
+                response = userService.getApiResponse();
+            }
+            else {
+                if (e.getMessage() != null)
+                    response.setResponseText("A regisztráció sikertelen a következő hiba miatt: " + e.getMessage());
+                else response.setResponseText("A regisztráció sikertelen a következő hiba miatt: " + e);
+
+                response.setSuccessful(false);
+            }
+        }
+        return response;
     }
 
     @PostMapping("/login")
@@ -122,6 +138,13 @@ public class UserController {
     public UserResponseDTO checkAndRefreshToken(@RequestBody User user) {
         UserResponseDTO response = userService.checkAndRefreshToken(user);
         return userService.removeUserPassword(response);
+    }
+
+    @GetMapping("/confirmRegistration")
+    @ResponseBody
+    public String confirmRegistration(@RequestParam String id) {
+        String response = "A regisztráció sikeresen megtörtént. Id: " + id;
+        return response;
     }
 
     @Transactional
@@ -249,6 +272,24 @@ public class UserController {
 
         try {
             tokenRepository.deleteAll();
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) response.setResponseText(e.getMessage());
+            else response.setResponseText(e.toString());
+        }
+        return response;
+    }
+
+    @Transactional
+    @GetMapping("/testExpireTokens")
+    @ResponseBody
+    public UserResponseDTO testExpireTokens() {
+
+        UserResponseDTO response = new UserResponseDTO();
+        response.setResponseText("SUCCESS");
+
+        try {
+            tokenRepository.testExpireTokens(LocalDateTime.now());
         }
         catch (Exception e) {
             if (e.getMessage() != null) response.setResponseText(e.getMessage());

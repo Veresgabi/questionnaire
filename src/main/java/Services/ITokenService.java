@@ -14,5 +14,6 @@ public interface ITokenService {
     UserResponseDTO refreshToken(UUID tokenUUID, User user);
     UserResponseDTO deleteToken(UUID tokenUUID);
     Token createToken(Enums.Role role);
+    Token createToken(Enums.Role role, Integer expireTimeInHours);
     Token createToken(User user);
 }

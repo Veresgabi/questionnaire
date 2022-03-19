@@ -13,6 +13,7 @@ import java.util.List;
 @Service
 public interface IUserService {
 
+    UserResponseDTO getApiResponse();
     UserResponseDTO saveUser(User user) throws Exception;
     UserResponseDTO login(User user) throws Exception;
     UserResponseDTO logout(User user);

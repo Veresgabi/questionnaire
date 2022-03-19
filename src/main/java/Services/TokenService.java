@@ -119,6 +119,16 @@ public class TokenService implements ITokenService {
         return token;
     }
 
+    public Token createToken(Enums.Role role, Integer expireTimeInHours) {
+
+        Token token = new Token();
+        token.setUuid(UUID.randomUUID());
+        token.setGeneratedAt(LocalDateTime.now());
+        token.setValidTo(LocalDateTime.now().plusHours(expireTimeInHours));
+
+        return token;
+    }
+
     public Token createToken(User user) {
 
         Token token = new Token();

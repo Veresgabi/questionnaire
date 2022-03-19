@@ -8,6 +8,8 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
 
+import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -27,4 +29,7 @@ public interface UserRepository extends CrudRepository<User, Long> {
     List<String> findPasswords();
 
     User save(User user);
+
+    @Query("SELECT u FROM User u where u.enabled = false")
+    List<User> getExpiredUsers();
 }
