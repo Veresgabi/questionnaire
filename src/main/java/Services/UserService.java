@@ -1,7 +1,6 @@
 package Services;
 
 import DTOs.AbstractDTO;
-import DTOs.QuestionnaireDTO;
 import DTOs.UserRequestDTO;
 import DTOs.UserResponseDTO;
 import Models.*;
@@ -17,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.MissingResourceException;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static Services.PasswordEncrypter.encrypt;
@@ -25,6 +25,7 @@ import static Services.PasswordEncrypter.encrypt;
 public class UserService implements IUserService {
 
     private final String errorRegistration = "A regisztráció sikertelen a következő hiba miatt: ";
+    private final String errorConfirmation = "A regisztráció megerősítése sikertelen a következő hiba miatt: ";
     private final String errorLogin = "A bejelentkezés sikertelen a következő hiba miatt: ";
     private final String errorChangePassword = "A jelszó megváltoztatása sikertelen a következő hiba miatt: ";
     private final String errorFoundUser = "A felhasználó keresése sikertelen a következő hiba miatt: ";
@@ -132,7 +133,7 @@ public class UserService implements IUserService {
                 String text = "Kedves " + user.getUserName() + "!" +
                         "\n\nA gszsz.hu kérdőív kitöltő alkalmazásán történt regisztrációjának megerősítése érdekében " +
                         "kérjük, kattintson a következő linkre: " +
-                        "http://localhost:8080/user/confirmRegistration?id=" + token.getUuid() +
+                        "https://fierce-meadow-29425.herokuapp.com/user/confirmRegistration?id=" + token.getUuid() + "_" + user.getId() +
                         "\nTájékoztatjuk, hogy a regisztráció megerősítésére a következő időpontig van lehetősége: " +
                         tokenExpireTime + "." +
                         "\n\nÜdvözlettel: Gumiipari Szakszervezeti Szövetség";
@@ -165,6 +166,129 @@ public class UserService implements IUserService {
             }
         }
         return response;
+    }
+
+    public String confirmRegistration(String id) {
+
+        String responseText = "";
+        String redirectPage = "";
+        String redirectText = "";
+
+        String uuidStg = null;
+        Long userId = null;
+        String[] splitedId = id.split("_");
+
+        try {
+            if (splitedId != null && splitedId.length > 0) {
+                uuidStg = splitedId[0];
+
+                if (splitedId.length == 2) userId = Long.parseLong(splitedId[1]);
+            }
+
+            UUID tokenUUID = UUID.fromString(uuidStg);
+            Token token = tokenRepository.findByUuid(tokenUUID);
+
+            if (token != null) {
+                User currentUser = token.getUser();
+                if (LocalDateTime.now().isBefore(token.getValidTo())) {
+
+                    if (!currentUser.isEnabled()) {
+                        currentUser.setEnabled(true);
+                        userRepository.save(currentUser);
+                        responseText = "Profiljának aktiválása sikeresen megtörtént, így már be tud jelentkezni " +
+                                "felhasználó nevének és jelszavának megadásával.";
+                    }
+                    else responseText = "Profiljának aktiválása már sikeresen megtörtént korábban, így már be tud jelentkezni " +
+                            "felhasználó nevének és jelszavának megadásával.";
+
+                    redirectText = "másodpercen belül átirányítjuk a bejelentkező felületre.";
+                    redirectPage = "http://gszsz.hu/kerdoiv/Login.html";
+                }
+                else if (LocalDateTime.now().isAfter(token.getValidTo())) {
+                    if (!currentUser.isEnabled()) {
+                        responseText = "Profiljának aktiválása sikertelen, mivel az aktiválásra " +
+                                "rendelkezésre álló idő lejárt.";
+                        redirectText = "másodpercen belül átirányítjuk a regisztrációs felületre.";
+                        redirectPage = "http://gszsz.hu/kerdoiv/Register.html";
+                    }
+                    else {
+                        responseText = "Profiljának aktiválása már sikeresen megtörtént korábban, " +
+                                "így már be tud jelentkezni felhasználó nevének és jelszavának megadásával.";
+                        redirectText = "másodpercen belül átirányítjuk a bejelentkező felületre.";
+                        redirectPage = "http://gszsz.hu/kerdoiv/Login.html";
+                    }
+                }
+            }
+            else {
+                User currentUser = userRepository.findUserById(userId);
+                if (currentUser == null || !currentUser.isEnabled()) {
+                    responseText = "Profiljának aktiválása nem történt meg, mivel az azonosítás sikertelen volt.";
+                    redirectText = "másodpercen belül átirányítjuk a regisztrációs felületre.";
+                    redirectPage = "http://gszsz.hu/kerdoiv/Register.html";
+                }
+                else if (currentUser != null && currentUser.isEnabled()) {
+                    responseText = "Profiljának aktiválása már sikeresen megtörtént korábban, " +
+                            "így már be tud jelentkezni felhasználó nevének és jelszavának megadásával.";
+                    redirectText = "másodpercen belül átirányítjuk a bejelentkező felületre.";
+                    redirectPage = "http://gszsz.hu/kerdoiv/Login.html";
+                }
+            }
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null) responseText = errorConfirmation + e.getMessage();
+            else responseText = errorConfirmation + e;
+        }
+
+        return getConfirmRegistrationResponseHtmlString(responseText, redirectText, redirectPage);
+    }
+
+    private String getConfirmRegistrationResponseHtmlString(String responseText, String redirectText, String redirectPage) {
+
+        String htmlRedirectNode = "";
+
+        if (redirectText != "") {
+            htmlRedirectNode = String.format("    <div style=\"margin-top: 20px;\">\n" +
+                    "        <span id=\"counter\"></span> %s\n" +
+                    "    </div>", redirectText);
+        }
+
+        String mainHTML = String.format("<head>\n" +
+                "    <meta charset=\"UTF-8\">\n" +
+                "</head>\n" +
+                "<body style=\"text-align: center; font-family: sans-serif;\">\n" +
+                "    <div style=\"margin-top: 100px;\">\n" +
+                "        %s\n" +
+                "    </div>\n" +
+                "    %s\n" +
+                "</body>", responseText, htmlRedirectNode);
+
+        String jsCode = String.format("<script>\n" +
+                "    var delayTime = 7;\n" +
+                "    var counterElement = document.getElementById(\"counter\");\n" +
+                "    counterElement.innerHTML = delayTime;\n" +
+                "    \n" +
+                "    var countDownDate = new Date().getTime() + (delayTime + 1) * 1000;\n" +
+                "\n" +
+                "    var x = setInterval(function() {\n" +
+                "\n" +
+                "        var now = new Date().getTime();\n" +
+                "\n" +
+                "        var distance = countDownDate - now;\n" +
+                "        var seconds = Math.floor((distance %s (1000 * 60)) / 1000);\n" +
+                "\n" +
+                "        if (seconds > -1) counterElement.innerHTML = seconds;\n" +
+                "\n" +
+                "        if (distance < 0) {\n" +
+                "            clearInterval(x);\n" +
+                "            window.location.href = \"%s\";\n" +
+                "        }\n" +
+                "    }, 1000);\n" +
+                "</script>", "%", redirectPage);
+
+        if (!redirectText.isEmpty() && !redirectPage.isEmpty()) {
+            return mainHTML + jsCode;
+        }
+        return mainHTML;
     }
 
     @Transactional

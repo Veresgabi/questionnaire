@@ -143,8 +143,7 @@ public class UserController {
     @GetMapping("/confirmRegistration")
     @ResponseBody
     public String confirmRegistration(@RequestParam String id) {
-        String response = "A regisztráció sikeresen megtörtént. Id: " + id;
-        return response;
+        return userService.confirmRegistration(id);
     }
 
     @Transactional

@@ -15,6 +15,7 @@ public interface IUserService {
 
     UserResponseDTO getApiResponse();
     UserResponseDTO saveUser(User user) throws Exception;
+    String confirmRegistration(String id);
     UserResponseDTO login(User user) throws Exception;
     UserResponseDTO logout(User user);
     UserResponseDTO changePassword(User user) throws Exception;
