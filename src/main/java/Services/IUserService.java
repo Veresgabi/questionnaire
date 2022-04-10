@@ -18,6 +18,7 @@ public interface IUserService {
     String confirmRegistration(String id);
     UserResponseDTO login(User user) throws Exception;
     UserResponseDTO logout(User user);
+    UserResponseDTO forgotPassword(User user);
     UserResponseDTO changePassword(User user) throws Exception;
     UserResponseDTO findUserByRegistrationNumber(UserRequestDTO userRequestDTO);
     UserResponseDTO deleteUserById(UserRequestDTO user);

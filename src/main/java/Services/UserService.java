@@ -19,6 +19,7 @@ import java.util.MissingResourceException;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static Services.PasswordEncrypter.decrypt;
 import static Services.PasswordEncrypter.encrypt;
 
 @Service
@@ -31,6 +32,7 @@ public class UserService implements IUserService {
     private final String errorFoundUser = "A felhasználó keresése sikertelen a következő hiba miatt: ";
     private final String errorDeleteUser = "A felhasználó törlése sikertelen a következő hiba miatt: ";
     private final String errorSendUnionNumber = "A szakszervezeti regisztrációs szám megadása sikertelen a következő hiba miatt: ";
+    private final String errorForgotPassword = "A jelszó küldése sikertelen a következő hiba miatt: ";
     private final String userNameOrPasswordExists = "A megadott felhasználónév vagy jelszó már " +
             "létezik. ";
     private final String emailExists = "A megadott email cím már létezik. ";
@@ -48,7 +50,7 @@ public class UserService implements IUserService {
         " fellelhető.";
     private final String invalidName = "A megadott munkavállalói törzsszámhoz tartozó, " +
         "nyilvántartásunkban szereplő név nem egyezik az Ön által megadott névvel.";
-
+    private final String invalidUserNameOrEmail = "Az Ön által megadott felhasználó név vagy e-mail cím nem található.";
     private final String success = "Sikeres regisztráció!";
     private final String successfulLogin = "Sikeres bejelentkezés!";
     private final String passwordChanged = "A jelszó megváltozott!";
@@ -190,7 +192,7 @@ public class UserService implements IUserService {
 
             if (token != null) {
                 User currentUser = token.getUser();
-                if (LocalDateTime.now().isBefore(token.getValidTo())) {
+                if (LocalDateTime.now().isBefore(token.getValidTo()) && currentUser != null) {
 
                     if (!currentUser.isEnabled()) {
                         currentUser.setEnabled(true);
@@ -204,7 +206,7 @@ public class UserService implements IUserService {
                     redirectText = "másodpercen belül átirányítjuk a bejelentkező felületre.";
                     redirectPage = "http://gszsz.hu/kerdoiv/Login.html";
                 }
-                else if (LocalDateTime.now().isAfter(token.getValidTo())) {
+                else if (LocalDateTime.now().isAfter(token.getValidTo()) && currentUser != null) {
                     if (!currentUser.isEnabled()) {
                         responseText = "Profiljának aktiválása sikertelen, mivel az aktiválásra " +
                                 "rendelkezésre álló idő lejárt.";
@@ -218,6 +220,8 @@ public class UserService implements IUserService {
                         redirectPage = "http://gszsz.hu/kerdoiv/Login.html";
                     }
                 }
+                // no need this case below because if the token is exists, the currentUser cannot be deleted
+                // else if (currentUser != null)
             }
             else {
                 User currentUser = userRepository.findUserById(userId);
@@ -345,6 +349,63 @@ public class UserService implements IUserService {
         }
         else response.setExpiredPage(true);
 
+        return response;
+    }
+
+    public UserResponseDTO forgotPassword(User user) {
+
+        UserResponseDTO response = new UserResponseDTO();
+
+        if (user.getTokenUUID() != null) {
+            response = tokenService.checkToken(user.getTokenUUID());
+
+            if (response.isSuccessful() && response.isAuthSuccess()) {
+                response.setExpiredPage(true);
+                return response;
+            }
+            else if (!response.isSuccessful()) return response;
+        }
+        else response.setSuccessful(true);
+
+        String emailPopupText = "";
+        try {
+            boolean givenUserName = true;
+            User foundUser = userRepository.findByUserName(user.getUserName());
+            if (foundUser == null) {
+                givenUserName = false;
+                foundUser = userRepository.findByEmail(user.getUserName());
+            }
+            if (foundUser != null && foundUser.isEnabled()) {
+                String text = "";
+                String userNameText = givenUserName ? "" : "\nAz Ön felhasználó neve a következő: " + foundUser.getUserName();
+                text = "Kedves " + foundUser.getUserName() + "!" +
+                        "\n\nÖn a gszsz.hu kérdőív kitöltő alkalmazásán regisztrált profilja jelszavának megküldését kérte, " +
+                        "melyre tekintettel az alábbiakról tájékoztatjuk:" + userNameText +
+                        "\nAz Ön jelszava a következő: " + decrypt(foundUser.getPassword()) +
+                        "\n\nÜdvözlettel: Gumiipari Szakszervezeti Szövetség";
+                emailPopupText = givenUserName ? "nyilvántartásunkban szereplő" : "megadott";
+                emailService.sendSimpleMessage(foundUser.getEmail(), "Elfelejtett jelszó", text);
+
+                String userNamePopupText = givenUserName ? "" : "felhasználó nevét és ";
+                response.setResponseText("Az Ön " + userNamePopupText +  "jelszavát elküldtük a " + emailPopupText + " e-mail címére");
+            }
+            else response.setResponseText(invalidUserNameOrEmail);
+        }
+        catch (Exception e) {
+            response.setSuccessful(false);
+            String errorMessage = "";
+            if (e.getMessage() != null) errorMessage = e.getMessage();
+            else errorMessage = e.toString();
+
+            if (errorMessage.contains("Failed messages") && errorMessage.contains("SendFailedException: Invalid Addresses"))
+                response.setResponseText(errorForgotPassword + "A " + emailPopupText + " e-mail címre nem sikerült elküldeni üzenetünket.");
+            else if (errorMessage.contains("Mail server connection failed") && errorMessage.contains("MailConnectException: Couldn't connect to host"))
+                response.setResponseText(errorForgotPassword + "A server nem elérhető, kérjük, ellenőrizze internet kapcsolatát.");
+            else if (errorMessage.contains("Authentication failed") && errorMessage.contains("AuthenticationFailedException")
+                    && errorMessage.contains("Username and Password not accepted"))
+                response.setResponseText(errorForgotPassword + "Az e-mail server hitelesítése nem sikerült.");
+            else response.setResponseText(errorForgotPassword + errorMessage);
+        }
         return response;
     }
 

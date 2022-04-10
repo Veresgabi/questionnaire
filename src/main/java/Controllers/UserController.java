@@ -105,6 +105,13 @@ public class UserController {
         return response;
     }
 
+    @PostMapping("/forgotPassword")
+    @ResponseBody
+    public UserResponseDTO forgotPassword(@RequestBody User user) throws Exception {
+        UserResponseDTO response = userService.forgotPassword(user);
+        return response;
+    }
+
     @PostMapping("/findUserByRegNumber")
     @ResponseBody
     public UserResponseDTO findUserByRegistrationNumber(@RequestBody UserRequestDTO userRequestDTO) {
