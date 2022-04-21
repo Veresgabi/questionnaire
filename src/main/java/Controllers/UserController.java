@@ -386,7 +386,7 @@ public class UserController {
         return response;
     }
 
-    @GetMapping("/testSendEmail")
+    @GetMapping("/testSendingEmail")
     @ResponseBody
     public UserResponseDTO testSendEmail() {
         String text = "This is a text e-mail. please visit http://localhost:8080/user/testGetRedirection";
