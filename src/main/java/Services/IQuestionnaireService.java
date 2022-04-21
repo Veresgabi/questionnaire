@@ -11,4 +11,6 @@ public interface IQuestionnaireService {
     QuestionnaireDTO getResult(QuestionnaireDTO questionnaireDTO);
 
     QuestionnaireDTO getApiResponse();
+    QuestionnaireDTO getGlobalQuestionnaireDTO();
+    void setGlobalQuestionnaireDTO(QuestionnaireDTO globalQuestionnaireDTO);
 }

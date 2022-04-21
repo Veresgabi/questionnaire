@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 import javax.transaction.Transactional;
 import java.text.DecimalFormat;
 import java.time.LocalDateTime;
@@ -48,8 +51,18 @@ public class QuestionnaireService implements IQuestionnaireService {
 
     private QuestionnaireDTO apiResponse;
 
+    private QuestionnaireDTO globalQuestionnaireDTO;
+
     public QuestionnaireDTO getApiResponse() {
         return apiResponse;
+    }
+
+    public QuestionnaireDTO getGlobalQuestionnaireDTO() {
+        return globalQuestionnaireDTO;
+    }
+
+    public void setGlobalQuestionnaireDTO(QuestionnaireDTO globalQuestionnaireDTO) {
+        this.globalQuestionnaireDTO = globalQuestionnaireDTO;
     }
 
     @Transactional
@@ -657,6 +670,7 @@ public class QuestionnaireService implements IQuestionnaireService {
                         else {
                             response.setResponseText("A válaszok mentése sikeresen megtörtént!");
                             answerRepository.saveAll(savedAnswers);
+                            globalQuestionnaireDTO = questionnaireDTO;
                         }
 
                             // Ha a beküldött válaszok között eredetileg több, vélhetően korábban már beküldött válaszokat is voltak
@@ -757,6 +771,7 @@ public class QuestionnaireService implements IQuestionnaireService {
                         else {
                             response.setResponseText("A válaszok mentése sikeresen megtörtént!");
                             answerRepository.saveAll(savedAnswers);
+                            globalQuestionnaireDTO = questionnaireDTO;
                         }
 
                         // Ha a beküldött válaszok között eredetileg több válasz is volt
@@ -840,6 +855,7 @@ public class QuestionnaireService implements IQuestionnaireService {
                         else {
                             response.setResponseText("A válaszok mentése sikeresen megtörtént!");
                             answerRepository.saveAll(savedAnswers);
+                            globalQuestionnaireDTO = questionnaireDTO;
                         }
 
                         // Ha a beküldött válaszok között eredetileg több válasz is volt
@@ -874,6 +890,7 @@ public class QuestionnaireService implements IQuestionnaireService {
                                         "időközben szakszervezeti tagsággá módosult, a szakszervezeti tagok részére " +
                                         "szóló kérdéseket lehetősége van megválaszolni.");
                                 answerRepository.saveAll(savedAnswers);
+                                globalQuestionnaireDTO = questionnaireDTO;
                                 regnumbQuest.setCompletedLevel(Enums.CompletedLevel.PARTIAL);
                                 registrationNumberQuestionnaireRepository.save(regnumbQuest);
                             }
