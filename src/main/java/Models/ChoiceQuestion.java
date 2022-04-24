@@ -33,6 +33,7 @@ public class ChoiceQuestion {
 
     @OneToMany(cascade=CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name="choice_quest_Id")
+    @OrderBy("Mark")
     private List<Choice> choices = new ArrayList<>();
 
     @Column(name = "completion")
