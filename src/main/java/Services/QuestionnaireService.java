@@ -371,51 +371,48 @@ public class QuestionnaireService implements IQuestionnaireService {
         response.setUser(userValidateResponse.getUser());
 
         try {
-            List<Questionnaire> questionnaires = new ArrayList<>();
+            List<Questionnaire> questionnaires;
 
+            List<Long> halfFilledQuestionnaireIds = registrationNumberQuestionnaireRepository.findQuestionnaireIdsByRegistrationNumber(currentUser.getRegistrationNum());
 
-            if (currentUser.getRole().equals(Enums.Role.USER)) {
-                questionnaires = questionnaireRepository.findQuestionnairesForUsers(currentUser.getRegistrationNum());
-                questionnaires = closeQuestionnaires(questionnaires);
-                questionnaires = questionnaires
+            questionnaires = questionnaireRepository.findQuestionnairesForUnionMemberUsers(currentUser.getRegistrationNum());
+            questionnaires = closeQuestionnaires(questionnaires);
+            questionnaires = questionnaires
                     .stream()
                     .filter(qu -> qu.getState() == Enums.State.PUBLISHED || qu.getState() == Enums.State.RESULT_PUBLISHED)
-                    .map(qu -> new Questionnaire(qu.getId(), qu.getTitle(), qu.isUnionMembersOnly(),
-                        qu.getChoiceQuestions().stream().map(cq -> {
-                            if (cq.isUnionMembersOnly())
-                                return new ChoiceQuestion(null, cq.getNumber(), null, false, true,
-                                    onlyForUnionMemebers, null, 0, false, null);
-                            else return cq;
-                        }).collect(Collectors.toList()),
-                        qu.getScaleQuestions().stream().map(sq -> {
-                            if (sq.isUnionMembersOnly())
-                                return new ScaleQuestion(null, sq.getNumber(), null, true, onlyForUnionMemebers,
-                                    null, null, null, false, 0, null);
-                            else return sq;
-                        }).collect(Collectors.toList()),
-                        qu.getTextualQuestions().stream().map(tq -> {
-                            if (tq.isUnionMembersOnly())
-                                  return new TextualQuestion(null, tq.getNumber(), null, true, true,
-                                      onlyForUnionMemebers, false, null, null);
-                            else return tq;
-                        }).collect(Collectors.toList()),
+                    // To hide union members questions
+                    .map(qu -> {
+                        if (currentUser.getRole().equals(Enums.Role.USER)) {
 
-                        qu.isPublished(), qu.getState(), qu.getCreatedAt(), qu.getFormattedCreatedAt(), qu.getLastModified(),
-                        qu.getFormattedLastModified(), qu.getDeadline(), qu.getQuestionnaireType(), qu.getFormattedDeadline(),
-                        qu.isStateChange(), qu.getCompletion(), qu.getCompletionRate(), qu.getRelatedUsers(), qu.getCompletionMako(),
-                        qu.getCompletionMakoBorrowed(), qu.getCompletionVac(), qu.getCompletionVacBorrowed()))
-                    .collect(Collectors.toList());
-            }
-            else if (currentUser.getRole().equals(Enums.Role.UNION_MEMBER_USER)) {
-                List<Long> halfFilledQuestionnaireIds = registrationNumberQuestionnaireRepository.findQuestionnaireIdsByRegistrationNumber(currentUser.getRegistrationNum());
+                            return new Questionnaire(qu.getId(), qu.getTitle(), qu.isUnionMembersOnly(),
+                                    qu.getChoiceQuestions().stream().map(cq -> {
+                                        if (cq.isUnionMembersOnly())
+                                            return new ChoiceQuestion(null, cq.getNumber(), null, false, true,
+                                                    onlyForUnionMemebers, null, 0, false, null);
+                                        else return cq;
+                                    }).collect(Collectors.toList()),
+                                    qu.getScaleQuestions().stream().map(sq -> {
+                                        if (sq.isUnionMembersOnly())
+                                            return new ScaleQuestion(null, sq.getNumber(), null, true, onlyForUnionMemebers,
+                                                    null, null, null, false, 0, null);
+                                        else return sq;
+                                    }).collect(Collectors.toList()),
+                                    qu.getTextualQuestions().stream().map(tq -> {
+                                        if (tq.isUnionMembersOnly())
+                                            return new TextualQuestion(null, tq.getNumber(), null, true, true,
+                                                    onlyForUnionMemebers, false, null, null);
+                                        else return tq;
+                                    }).collect(Collectors.toList()),
 
-                questionnaires = questionnaireRepository.findQuestionnairesForUnionMemberUsers(currentUser.getRegistrationNum());
-                questionnaires = closeQuestionnaires(questionnaires);
-                questionnaires = questionnaires
-                        .stream()
-                        .filter(qu -> qu.getState() == Enums.State.PUBLISHED || qu.getState() == Enums.State.RESULT_PUBLISHED)
-                        .map(qu -> {
-                            if (halfFilledQuestionnaireIds.contains(qu.getId())) return new Questionnaire(qu.getId(), qu.getTitle(), qu.isUnionMembersOnly(),
+                                    qu.isPublished(), qu.getState(), qu.getCreatedAt(), qu.getFormattedCreatedAt(), qu.getLastModified(),
+                                    qu.getFormattedLastModified(), qu.getDeadline(), qu.getQuestionnaireType(), qu.getFormattedDeadline(),
+                                    qu.isStateChange(), qu.getCompletion(), qu.getCompletionRate(), qu.getRelatedUsers(), qu.getCompletionMako(),
+                                    qu.getCompletionMakoBorrowed(), qu.getCompletionVac(), qu.getCompletionVacBorrowed());
+                        }
+                        else return qu;
+                    })
+                    .map(qu -> {
+                        if (halfFilledQuestionnaireIds.contains(qu.getId())) return new Questionnaire(qu.getId(), qu.getTitle(), qu.isUnionMembersOnly(),
                                 qu.getChoiceQuestions().stream().map(cq -> {
                                     if (!cq.isUnionMembersOnly()) {
                                         cq.setCompletedByCurrentUser(true);
@@ -442,10 +439,9 @@ public class QuestionnaireService implements IQuestionnaireService {
                                 qu.getFormattedLastModified(), qu.getDeadline(), qu.getQuestionnaireType(), qu.getFormattedDeadline(),
                                 qu.isStateChange(), qu.getCompletion(), qu.getCompletionRate(), qu.getRelatedUsers(), qu.getCompletionMako(),
                                 qu.getCompletionMakoBorrowed(), qu.getCompletionVac(), qu.getCompletionVacBorrowed());
-                            else return qu;
-                        })
-                        .collect(Collectors.toList());
-            }
+                        else return qu;
+                    })
+                    .collect(Collectors.toList());
 
             response.setQuestionnaireList(questionnaires);
             response.setSuccessful(true);
