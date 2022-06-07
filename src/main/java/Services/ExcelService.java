@@ -113,7 +113,7 @@ public class ExcelService implements IExcelService {
         return response;
     }
 
-    private ExcelDTO readFromExcel(ExcelDTO response, String filePath, boolean forUnionMembers, String originalFileName) {
+    private ExcelDTO readFromExcel(ExcelDTO response, String filePath, boolean isForUnionMembers, String originalFileName) {
 
         Exception exception = null;
         Map<Integer, List<UnionMembershipNumber>> dataUnionMembNums = new HashMap<>();
@@ -128,7 +128,7 @@ public class ExcelService implements IExcelService {
             for (int i = 0; i < numberOfSheets; i++) {
                 Sheet sheet = workbook.getSheetAt(i);
                 String sheetName = sheet.getSheetName();
-                if (forUnionMembers) dataUnionMembNums.put(i, new ArrayList<>());
+                if (isForUnionMembers) dataUnionMembNums.put(i, new ArrayList<>());
                 dataRegNums.put(sheetName, new ArrayList<>());
 
                 for (Row row : sheet) {
@@ -145,7 +145,7 @@ public class ExcelService implements IExcelService {
                             else {
                                 // Check can we parse the item to Long. If can, add to the value Map.
                                 Long.parseLong(cellValue);
-                                if (forUnionMembers) {
+                                if (isForUnionMembers) {
                                     if (cellCounter == 0) {
                                         unionMembershipNumber.setRegistrationNumber(cellValue);
                                         dataRegNums.get(sheetName).add(cellValue);
@@ -173,7 +173,7 @@ public class ExcelService implements IExcelService {
                         // Numeric Cell values
                         try {
                             Long numericValue = (long) cell.getNumericCellValue();
-                            if (forUnionMembers) {
+                            if (isForUnionMembers) {
                                 if (cellCounter == 0) {
                                     unionMembershipNumber.setRegistrationNumber(numericValue.toString());
                                     dataRegNums.get(sheetName).add(numericValue.toString());
@@ -194,7 +194,7 @@ public class ExcelService implements IExcelService {
 
                         // Cell formula values
                         try {
-                            if (forUnionMembers) {
+                            if (isForUnionMembers) {
                                 if (cellCounter == 0) {
                                     // try to parse it to number
                                     Long.parseLong(cell.getCellFormula() + "");
@@ -234,16 +234,20 @@ public class ExcelService implements IExcelService {
         catch (Exception e) {
             exception = e;
         }
-        ExcelUploadStatics statics = null;
+        List<ExcelUploadStatics> staticsList = new ArrayList<>();
 
         if (exception == null) {
             try {
-                if (forUnionMembers) {
-                    statics = unionMemberNumberService.saveNumberWithCheck(dataUnionMembNums, originalFileName);
-                    if (!dataRegNums.isEmpty()) registrationNumberService.saveNumberWithCheck(dataRegNums, originalFileName, false);
+                if (isForUnionMembers) {
+                    staticsList.add(unionMemberNumberService.saveNumberWithCheck(dataUnionMembNums, originalFileName));
+                    if (!dataRegNums.isEmpty()) {
+                        staticsList.add(registrationNumberService.saveNumberWithCheck(response.getUser(), dataRegNums,
+                                originalFileName, false));
+                    }
                 }
                 else {
-                    statics = registrationNumberService.saveNumberWithCheck(dataRegNums, originalFileName, true);
+                    staticsList.add(registrationNumberService.saveNumberWithCheck(response.getUser(), dataRegNums,
+                            originalFileName, true));
                 }
 
             } catch (Exception e) {
@@ -258,7 +262,8 @@ public class ExcelService implements IExcelService {
         // check again if exception is null
         if (exception == null) {
             response.setResponseText(getActualResponseText(exception, originalFileName, true));
-            response.setStatics(statics);
+            response.setStaticsList(staticsList);
+
             response.setSuccessful(true);
         }
         else {
@@ -316,29 +321,31 @@ public class ExcelService implements IExcelService {
         response.setUser(userValidateResponse.getUser());
 
         // ---------------------------------------------------------------------------------------------------------
-        ExcelUploadStatics statics = null;
-        Integer numberOfActiveUsers = 0;
-        Integer numberOfRecords = 0;
-        Integer numberOfInactiveUsers;
+        List<ExcelUploadStatics> staticsList = new ArrayList<>();
 
         try {
-            if (currentUser.getRole().equals(Enums.Role.ADMIN)) {
-                statics = excelUploadStaticsRepository.findFirstByTypeOfUpload(Enums.ExcelUploadType.REGISTRATION_NUMBER);
-                numberOfActiveUsers = regNumberRepository.getNumberOfUsers();
-                numberOfRecords = regNumberRepository.getNumberOfRecords();
-            }
-            else if (currentUser.getRole().equals(Enums.Role.UNION_MEMBER_ADMIN)) {
-                statics = excelUploadStaticsRepository.findFirstByTypeOfUpload(Enums.ExcelUploadType.UNION_MEMBERSHIP_NUMBER);
-                numberOfActiveUsers = unionMembershipNumRepo.getNumberOfUnionMemberUsers();
-                numberOfRecords = unionMembershipNumRepo.getNumberOfRecords();
-            }
-            numberOfInactiveUsers = numberOfRecords - numberOfActiveUsers;
+            List<ExcelUploadStatics> regNumberStatics = excelUploadStaticsRepository.findAllByTypeOfUpload(
+                    Enums.ExcelUploadType.REGISTRATION_NUMBER);
 
-            if (statics == null) statics = new ExcelUploadStatics();
-            statics.setNumberOfActiveElements(numberOfActiveUsers);
-            statics.setNumberOfInactiveElements(numberOfInactiveUsers);
+            for (ExcelUploadStatics staticsRegNumbers : regNumberStatics) {
+                if (staticsRegNumbers == null) staticsRegNumbers = new ExcelUploadStatics();
 
-            response.setStatics(statics);
+                staticsRegNumbers.setNumberOfActiveElements(regNumberRepository.getNumberOfUsers());
+                staticsRegNumbers.setNumberOfInactiveElements(regNumberRepository.getNumberOfRecords()
+                        - staticsRegNumbers.getNumberOfActiveElements());
+                staticsList.add(staticsRegNumbers);
+            }
+
+            if (currentUser.getRole().equals(Enums.Role.UNION_MEMBER_ADMIN)) {
+                ExcelUploadStatics staticsUnionMembers = excelUploadStaticsRepository.findFirstByTypeOfUpload(Enums.ExcelUploadType.UNION_MEMBERSHIP_NUMBER);
+                if (staticsUnionMembers == null) staticsUnionMembers = new ExcelUploadStatics();
+
+                staticsUnionMembers.setNumberOfActiveElements(unionMembershipNumRepo.getNumberOfUnionMemberUsers());
+                staticsUnionMembers.setNumberOfInactiveElements(unionMembershipNumRepo.getNumberOfRecords()
+                        - staticsUnionMembers.getNumberOfActiveElements());
+                staticsList.add(staticsUnionMembers);
+            }
+            response.setStaticsList(staticsList);
         }
         catch (Exception e) {
             if (e.getMessage() != null)

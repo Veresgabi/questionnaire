@@ -28,7 +28,7 @@ public class RegistrationNumberService implements IRegistrationNumberService {
     @Autowired
     public ExcelUploadStaticsRepository excelUploadStaticsRepository;
 
-    public ExcelUploadStatics saveNumberWithCheck(Map<String, List<String>> regNumbers, String originalFileName, boolean needToInactivate) {
+    public ExcelUploadStatics saveNumberWithCheck(User currentUser, Map<String, List<String>> regNumbers, String originalFileName, boolean needToInactivate) {
 
         HashMap<String, RegistrationNumber> insertedRegNumbers = new HashMap<>();
         List<RegistrationNumber> inactivatedRegNumbers = new ArrayList<>();
@@ -102,24 +102,33 @@ public class RegistrationNumberService implements IRegistrationNumberService {
         }
         ExcelUploadStatics statics = new ExcelUploadStatics();
 
-        if (!insertedRegNumbers.isEmpty() || needToInactivate) {
-            ExcelUploadStatics foundStatics = excelUploadStaticsRepository.findFirstByTypeOfUpload(Enums.ExcelUploadType.REGISTRATION_NUMBER);
-            if (foundStatics != null) statics.setId(foundStatics.getId());
+        List<ExcelUploadStatics> foundStaticsList;
 
-            statics.setLastUploadedFile(originalFileName);
-            statics.setLastUpload(LocalDateTime.now());
-            statics.setTypeOfUpload(Enums.ExcelUploadType.REGISTRATION_NUMBER);
+        foundStaticsList = excelUploadStaticsRepository.findAllByTypeOfUpload(
+                Enums.ExcelUploadType.REGISTRATION_NUMBER);
 
-            Integer numberOfActiveUsers = 0;
-            numberOfActiveUsers = regNumberRepository.getNumberOfUsers();
-            Integer numberOfRecords = 0;
-            numberOfRecords = regNumberRepository.getNumberOfRecords();
-            Integer numberOfInactiveUsers = numberOfRecords - numberOfActiveUsers;
-            statics.setNumberOfActiveElements(numberOfActiveUsers);
-            statics.setNumberOfInactiveElements(numberOfInactiveUsers);
-
-            excelUploadStaticsRepository.save(statics);
+        if (foundStaticsList != null && !foundStaticsList.isEmpty()) {
+            for (ExcelUploadStatics s : foundStaticsList) {
+                if (s.getUpdatedBy() == null || s.getUpdatedBy().equals(currentUser.getRole())) {
+                    statics.setId(s.getId());
+                }
+            }
         }
+
+        statics.setLastUploadedFile(originalFileName);
+        statics.setLastUpload(LocalDateTime.now());
+        statics.setUpdatedBy(currentUser.getRole());
+        statics.setTypeOfUpload(Enums.ExcelUploadType.REGISTRATION_NUMBER);
+
+        Integer numberOfActiveUsers;
+        numberOfActiveUsers = regNumberRepository.getNumberOfUsers();
+        Integer numberOfRecords;
+        numberOfRecords = regNumberRepository.getNumberOfRecords();
+        Integer numberOfInactiveUsers = numberOfRecords - numberOfActiveUsers;
+        statics.setNumberOfActiveElements(numberOfActiveUsers);
+        statics.setNumberOfInactiveElements(numberOfInactiveUsers);
+
+        excelUploadStaticsRepository.save(statics);
 
         return statics;
     }

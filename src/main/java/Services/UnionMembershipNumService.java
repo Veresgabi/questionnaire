@@ -29,7 +29,7 @@ public class UnionMembershipNumService implements IUnionMembershipNumService {
 
   public ExcelUploadStatics saveNumberWithCheck(Map<Integer, List<UnionMembershipNumber>> unMembNumbers, String originalFileName) {
     Map<String, UnionMembershipNumber> insertedUnMembNumbers = new HashMap<>();
-    List<UnionMembershipNumber> inactivatedUnMembNumbers = new ArrayList<>();
+    List<UnionMembershipNumber> inactivatedUnMembNumbers;
 
     List<UnionMembershipNumber> allUnMembNumbers = unionMembershipNumRepo.findAll();
 
@@ -105,11 +105,12 @@ public class UnionMembershipNumService implements IUnionMembershipNumService {
 
     statics.setLastUploadedFile(originalFileName);
     statics.setLastUpload(LocalDateTime.now());
+    statics.setUpdatedBy(Enums.Role.UNION_MEMBER_ADMIN);
     statics.setTypeOfUpload(Enums.ExcelUploadType.UNION_MEMBERSHIP_NUMBER);
 
-    Integer numberOfActiveUnionMemberships = 0;
+    Integer numberOfActiveUnionMemberships;
     numberOfActiveUnionMemberships = unionMembershipNumRepo.getNumberOfUnionMemberUsers();
-    Integer numberOfRecords = 0;
+    Integer numberOfRecords;
     numberOfRecords = unionMembershipNumRepo.getNumberOfRecords();
     Integer numberOfInactiveUsers = numberOfRecords - numberOfActiveUnionMemberships;
     statics.setNumberOfActiveElements(numberOfActiveUnionMemberships);

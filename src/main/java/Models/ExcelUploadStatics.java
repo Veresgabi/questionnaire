@@ -21,6 +21,9 @@ public class ExcelUploadStatics {
     @Column(name = "lastUpload", nullable = false)
     private LocalDateTime lastUpload;
 
+    @Column(name = "updatedBy")
+    private Enums.Role updatedBy;
+
     @Transient
     private String formattedLastUpdate;
 
@@ -34,13 +37,14 @@ public class ExcelUploadStatics {
     private Integer numberOfInactiveElements;
 
     public ExcelUploadStatics(Long id, String lastUploadedFile, LocalDateTime lastUpload, String formattedLastUpdate,
-                              Enums.ExcelUploadType uploadType, Integer numberOfActiveElements,
+                              Enums.Role updatedBy, Enums.ExcelUploadType typeOfUpload, Integer numberOfActiveElements,
                               Integer numberOfInactiveElements) {
         this.id = id;
         this.lastUploadedFile = lastUploadedFile;
         this.lastUpload = lastUpload;
         this.formattedLastUpdate = formattedLastUpdate;
-        this.typeOfUpload = uploadType;
+        this.updatedBy = updatedBy;
+        this.typeOfUpload = typeOfUpload;
         this.numberOfActiveElements = numberOfActiveElements;
         this.numberOfInactiveElements = numberOfInactiveElements;
     }
@@ -81,6 +85,14 @@ public class ExcelUploadStatics {
 
     public void setLastUpload(LocalDateTime lastUpload) {
         this.lastUpload = lastUpload;
+    }
+
+    public Enums.Role getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(Enums.Role updatedBy) {
+        this.updatedBy = updatedBy;
     }
 
     public Enums.ExcelUploadType getTypeOfUpload() {
