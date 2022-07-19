@@ -38,6 +38,8 @@ public class ExcelService implements IExcelService {
     @Autowired
     public UnionMembershipNumRepository unionMembershipNumRepo;
     @Autowired
+    public RegNumberRepository regNumRepo;
+    @Autowired
     public ExcelUploadStaticsRepository excelUploadStaticsRepository;
     @Autowired
     public IQuestionnaireService questionnaireService ;
@@ -357,6 +359,103 @@ public class ExcelService implements IExcelService {
         return response;
     }
 
+    public void exportResultToExcel(HttpServletResponse response, QuestionnaireDTO questionnaireDTO) throws Exception {
+
+        // 1. Check token is valid
+        UserResponseDTO userValidateResponse = tokenService.checkToken(questionnaireDTO.getTokenUUID());
+
+        // If not valid, return the response!
+        if (!userValidateResponse.isSuccessful()) response.sendError(500);
+        if (!userValidateResponse.isAuthSuccess()) response.sendError(401);
+
+        User currentUser = userValidateResponse.getUser();
+
+        // 2. Check the current user of the page is equals to user of token
+        if (!currentUser.getId().equals(questionnaireDTO.getUser().getId())) {
+            response.sendError(403);
+        }
+
+        // 3. Check the role is compatible for the requested action
+        if (!currentUser.getRole().equals(Enums.Role.UNION_MEMBER_ADMIN)) {
+            response.sendError(403);
+        }
+
+        if (questionnaireService.getGlobalQuestionnaireDTO() != null
+                && questionnaireService.getGlobalQuestionnaireDTO().getUser().getId().equals(currentUser.getId())) {
+            questionnaireDTO = questionnaireService.getGlobalQuestionnaireDTO();
+
+            Questionnaire questionnaire = questionnaireDTO.getQuestionnaire();
+
+            String numberOfUsers = "";
+            String numberOfUnionMembers = "";
+
+            if (questionnaire.getQuestionnaireType().equals(Enums.QuestionnaireType.SIMPLE)) {
+                numberOfUsers = regNumRepo.getNumberOfUsers().toString();
+            }
+            else if (questionnaire.getQuestionnaireType().equals(Enums.QuestionnaireType.MIXED)) {
+                numberOfUsers = regNumRepo.getNumberOfUsers().toString();
+                numberOfUnionMembers = unionMembershipNumRepo.getNumberOfUnionMemberUsers().toString();
+            }
+            else if (questionnaire.getQuestionnaireType().equals(Enums.QuestionnaireType.UNION_MEMBERS_ONLY)) {
+                numberOfUnionMembers = unionMembershipNumRepo.getNumberOfUnionMemberUsers().toString();
+            }
+
+            XSSFWorkbook workbook = new XSSFWorkbook();
+
+            Sheet sheet = createExportQuestionnaireTitleRow(workbook, questionnaire);
+
+            for (int i = 0; i < questionnaire.getTextualQuestions().size() + questionnaire.getScaleQuestions().size()
+                    + questionnaire.getChoiceQuestions().size(); i++) {
+
+                final Integer index = i;
+                TextualQuestion textualQuestion = questionnaire.getTextualQuestions()
+                        .stream()
+                        .filter(question -> question.getNumber().equals(index + 1))
+                        .findFirst()
+                        .orElse(null);
+
+                XSSFCellStyle questionBodyStyle = workbook.createCellStyle();
+                questionBodyStyle.setAlignment(HorizontalAlignment.LEFT);
+                questionBodyStyle.setWrapText(true);
+                questionBodyStyle.setVerticalAlignment(VerticalAlignment.TOP);
+
+                if (textualQuestion != null) {
+                    createExportTextualQuestionResult(sheet, workbook, questionBodyStyle, questionnaireDTO, textualQuestion);
+                }
+                else {
+                    ScaleQuestion scaleQuestion = questionnaire.getScaleQuestions()
+                            .stream()
+                            .filter(question -> question.getNumber().equals(index + 1))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (scaleQuestion != null) {
+                        createExportScaleQuestionResult(sheet, workbook, questionBodyStyle, questionnaireDTO, scaleQuestion,
+                                numberOfUsers, numberOfUnionMembers);
+                    }
+                    else {
+                        ChoiceQuestion choiceQuestion = questionnaire.getChoiceQuestions()
+                                .stream()
+                                .filter(question -> question.getNumber().equals(index + 1))
+                                .findFirst()
+                                .orElse(null);
+
+                        createExportChoiceQuestionResult(sheet, workbook, questionBodyStyle, questionnaireDTO, choiceQuestion,
+                                numberOfUsers, numberOfUnionMembers);
+
+                    }
+                }
+            }
+            ServletOutputStream outputStream = response.getOutputStream();
+            workbook.write(outputStream);
+            workbook.close();
+            response.setStatus(200);
+            // questionnaireService.setGlobalQuestionnaireDTO(null);
+        }
+        else response.sendError(404);
+
+    }
+
     public void exportAnswersToExcel(HttpServletResponse response, QuestionnaireDTO questionnaireDTO) throws Exception {
 
         // 1. Check token is valid
@@ -381,7 +480,6 @@ public class ExcelService implements IExcelService {
         if (questionnaireService.getGlobalQuestionnaireDTO() != null
                 && questionnaireService.getGlobalQuestionnaireDTO().getUser().getId().equals(currentUser.getId())) {
             questionnaireDTO = questionnaireService.getGlobalQuestionnaireDTO();
-            questionnaireService.setGlobalQuestionnaireDTO(null);
 
             Questionnaire questionnaire = questionnaireDTO.getQuestionnaire();
             XSSFWorkbook workbook = new XSSFWorkbook();
@@ -460,6 +558,7 @@ public class ExcelService implements IExcelService {
             workbook.write(outputStream);
             workbook.close();
             response.setStatus(200);
+            questionnaireService.setGlobalQuestionnaireDTO(null);
         }
         else response.sendError(404);
     }
@@ -575,6 +674,77 @@ public class ExcelService implements IExcelService {
         }
     }
 
+    private void createExportTextualQuestionResult(Sheet sheet, XSSFWorkbook workbook, XSSFCellStyle questionBodyStyle,
+                                             QuestionnaireDTO questionnaireDTO, TextualQuestion textualQuestion) {
+        createExportQuestionHeader(sheet, workbook, textualQuestion);
+
+        List<String> answerTexts = textualQuestion.getAnswers()
+                .stream()
+                .map(a -> a.getContent())
+                .collect(Collectors.toList());
+
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                sheet.getLastRowNum() + 1, 1, 15));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                sheet.getLastRowNum() + 1, 16, 21));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 2,
+                sheet.getLastRowNum() + 2, 1, 15));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 2,
+                sheet.getLastRowNum() + 2, 16, 21));
+
+        Row answerFirstRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row answerSecondRow = sheet.createRow(sheet.getLastRowNum() + 1);
+
+        XSSFFont answerNumberFont = createExportFont(workbook, false,
+                new XSSFColor(new java.awt.Color(0, 0, 0)));
+        questionBodyStyle.setFont(answerNumberFont);
+
+        Cell answerHeaderCell = answerSecondRow.createCell(1, CellType.STRING);
+        answerHeaderCell.setCellStyle(questionBodyStyle);
+        answerHeaderCell.setCellValue("Válaszok:");
+
+        int i = 1;
+        for (String answerText : answerTexts) {
+
+            sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                    sheet.getLastRowNum() + 3, 1, 1));
+            sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                    sheet.getLastRowNum() + 3, 2, 15));
+            sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                    sheet.getLastRowNum() + 3, 16, 21));
+
+            Row answerRow1 = sheet.createRow(sheet.getLastRowNum() + 1);
+
+            XSSFCellStyle answerNumberStyle = workbook.createCellStyle();
+            answerNumberStyle.cloneStyleFrom(questionBodyStyle);
+            answerNumberStyle.setAlignment(HorizontalAlignment.CENTER);
+            answerNumberStyle.setVerticalAlignment(VerticalAlignment.TOP);
+
+            Cell numberCell = answerRow1.createCell(1, CellType.STRING);
+            numberCell.setCellStyle(answerNumberStyle);
+            numberCell.setCellValue(i + ".");
+
+            XSSFFont answerTextFont = createExportFont(workbook, false,
+                    new XSSFColor(new java.awt.Color(47, 117, 181)));
+
+            XSSFCellStyle answerTextStyle = workbook.createCellStyle();
+            answerTextStyle.cloneStyleFrom(questionBodyStyle);
+            answerTextStyle.setFont(answerTextFont);
+            answerTextStyle.setAlignment(HorizontalAlignment.LEFT);
+            answerTextStyle.setVerticalAlignment(VerticalAlignment.TOP);
+
+            Cell answerCell = answerRow1.createCell(2, CellType.STRING);
+            answerCell.setCellStyle(answerTextStyle);
+            answerCell.setCellValue(answerText);
+
+            Row answerRow2 = sheet.createRow(sheet.getLastRowNum() + 1);
+            Row answerRow3 = sheet.createRow(sheet.getLastRowNum() + 1);
+
+            i++;
+        }
+        Row answerThirdRow = sheet.createRow(sheet.getLastRowNum() + 1);
+    }
+
     private void createExportScaleQuestion(Sheet sheet, XSSFWorkbook workbook, XSSFCellStyle questionBodyStyle,
                                            XSSFCellStyle markStyle, XSSFCellStyle selectedMarkStyle,
                                            XSSFCellStyle inactiveMarkStyle, QuestionnaireDTO questionnaireDTO,
@@ -639,6 +809,108 @@ public class ExcelService implements IExcelService {
         else {
             createExportEmptyQuestionField(sheet, questionBodyStyle);
         }
+    }
+
+    private void createExportScaleQuestionResult(Sheet sheet, XSSFWorkbook workbook, XSSFCellStyle questionBodyStyle,
+                                                 QuestionnaireDTO questionnaireDTO, ScaleQuestion scaleQuestion,
+                                                 String numberOfUsers, String numberOfUnionMembers) {
+        createExportQuestionHeader(sheet, workbook, scaleQuestion);
+
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 2,
+                sheet.getLastRowNum() + 3, 1, 5));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 4,
+                sheet.getLastRowNum() + 5, 1, 5));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 6,
+                sheet.getLastRowNum() + 7, 1, 5));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 8,
+                sheet.getLastRowNum() + 9, 1, 5));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 10,
+                sheet.getLastRowNum() + 11, 1, 5));
+
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 2,
+                sheet.getLastRowNum() + 3, 6, 8));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 4,
+                sheet.getLastRowNum() + 5, 6, 8));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 6,
+                sheet.getLastRowNum() + 7, 6, 8));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 8,
+                sheet.getLastRowNum() + 9, 6, 8));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 10,
+                sheet.getLastRowNum() + 11, 6, 8));
+
+        Row firstRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row secondRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row thirdRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row fourthRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row fifthRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row sixthRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row seventhRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row eighthRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row ninthRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row tenthRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row eleventhRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row twelfthRow = sheet.createRow(sheet.getLastRowNum() + 1);
+
+        XSSFFont answerTextBlackFont = createExportFont(workbook, false,
+                new XSSFColor(new java.awt.Color(0, 0, 0)));
+        questionBodyStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        questionBodyStyle.setFont(answerTextBlackFont);
+
+        XSSFFont answerTextBlueFont = createExportFont(workbook, false,
+                new XSSFColor(new java.awt.Color(47, 117, 181)));
+
+        XSSFCellStyle answerTextStyleBlueFont = workbook.createCellStyle();
+        answerTextStyleBlueFont.cloneStyleFrom(questionBodyStyle);
+        answerTextStyleBlueFont.setFont(answerTextBlueFont);
+        answerTextStyleBlueFont.setAlignment(HorizontalAlignment.CENTER);
+
+        XSSFCellStyle answerTextStyleBlackFont = workbook.createCellStyle();
+        answerTextStyleBlackFont.cloneStyleFrom(answerTextStyleBlueFont);
+        answerTextStyleBlackFont.setFont(answerTextBlackFont);
+
+        Cell minValueTitleCell = secondRow.createCell(1, CellType.STRING);
+        minValueTitleCell.setCellStyle(questionBodyStyle);
+        minValueTitleCell.setCellValue("Minimális választható érték:");
+
+        Cell minValueCell = secondRow.createCell(6, CellType.STRING);
+        minValueCell.setCellStyle(answerTextStyleBlackFont);
+        minValueCell.setCellValue(scaleQuestion.getScaleMinNumber());
+
+        Cell maxValueTitleCell = fourthRow.createCell(1, CellType.STRING);
+        maxValueTitleCell.setCellStyle(questionBodyStyle);
+        maxValueTitleCell.setCellValue("Maximális választható érték:");
+
+        Cell maxValueCell = fourthRow.createCell(6, CellType.STRING);
+        maxValueCell.setCellStyle(answerTextStyleBlackFont);
+        maxValueCell.setCellValue(scaleQuestion.getScaleMaxNumber());
+
+        Cell averageTitleCell = sixthRow.createCell(1, CellType.STRING);
+        averageTitleCell.setCellStyle(questionBodyStyle);
+        averageTitleCell.setCellValue("Átlag:");
+
+        Cell averageCell = sixthRow.createCell(6, CellType.STRING);
+        averageCell.setCellStyle(answerTextStyleBlueFont);
+        averageCell.setCellValue(scaleQuestion.getAverageRate());
+
+        Cell completionTitleCell = eighthRow.createCell(1, CellType.STRING);
+        completionTitleCell.setCellStyle(questionBodyStyle);
+        completionTitleCell.setCellValue("Megválaszolva (alkalom):");
+
+        Cell completionCell = eighthRow.createCell(6, CellType.STRING);
+        completionCell.setCellStyle(answerTextStyleBlueFont);
+        completionCell.setCellValue(scaleQuestion.getCompletion());
+
+        Cell numberOfPersonsToAnswerTitleCell = tenthRow.createCell(1, CellType.STRING);
+        numberOfPersonsToAnswerTitleCell.setCellStyle(questionBodyStyle);
+        numberOfPersonsToAnswerTitleCell.setCellValue("Megválaszolásra jogosult személyek száma:");
+
+        Cell numberOfPersonsToAnswerCell = tenthRow.createCell(6, CellType.STRING);
+        numberOfPersonsToAnswerCell.setCellStyle(answerTextStyleBlueFont);
+        String numberOfPersonsToAnswer;
+        if (scaleQuestion.isUnionMembersOnly()) numberOfPersonsToAnswer = numberOfUnionMembers;
+        else numberOfPersonsToAnswer = numberOfUsers;
+
+        numberOfPersonsToAnswerCell.setCellValue(numberOfPersonsToAnswer);
     }
 
     private void createExportChoiceQuestion(Sheet sheet, XSSFWorkbook workbook, XSSFCellStyle questionBodyStyle,
@@ -727,6 +999,114 @@ public class ExcelService implements IExcelService {
         }
     }
 
+    private void createExportChoiceQuestionResult(Sheet sheet, XSSFWorkbook workbook, XSSFCellStyle questionBodyStyle,
+                                            QuestionnaireDTO questionnaireDTO, ChoiceQuestion choiceQuestion,
+                                            String numberOfUsers, String numberOfUnionMembers) {
+
+        createExportQuestionHeader(sheet, workbook, choiceQuestion);
+
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 2,
+                sheet.getLastRowNum() + 2, 16, 18));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 2,
+                sheet.getLastRowNum() + 2, 19, 21));
+
+        Row firstRow = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row secondRow = sheet.createRow(sheet.getLastRowNum() + 1);
+
+        XSSFFont answerTextBlackFont = createExportFont(workbook, false,
+                new XSSFColor(new java.awt.Color(0, 0, 0)));
+        questionBodyStyle.setFont(answerTextBlackFont);
+
+        XSSFCellStyle answerTextStyleCenteredBlackFont = workbook.createCellStyle();
+        answerTextStyleCenteredBlackFont.cloneStyleFrom(questionBodyStyle);
+        answerTextStyleCenteredBlackFont.setAlignment(HorizontalAlignment.CENTER);
+
+        XSSFFont answerTextBlueFont = createExportFont(workbook, false,
+                new XSSFColor(new java.awt.Color(47, 117, 181)));
+
+        XSSFCellStyle answerTextStyleCenteredBlueFont = workbook.createCellStyle();
+        answerTextStyleCenteredBlueFont.cloneStyleFrom(questionBodyStyle);
+        answerTextStyleCenteredBlueFont.setFont(answerTextBlueFont);
+        answerTextStyleCenteredBlueFont.setAlignment(HorizontalAlignment.CENTER);
+        answerTextStyleCenteredBlueFont.setVerticalAlignment(VerticalAlignment.CENTER);
+
+        Cell selectionRateTitleCell = secondRow.createCell(16, CellType.STRING);
+        selectionRateTitleCell.setCellStyle(answerTextStyleCenteredBlackFont);
+        selectionRateTitleCell.setCellValue("Kiválasztási arány:");
+
+        Cell selectionNumberTitleCell = secondRow.createCell(19, CellType.STRING);
+        selectionNumberTitleCell.setCellStyle(answerTextStyleCenteredBlackFont);
+        selectionNumberTitleCell.setCellValue("Kiválasztások száma:");
+
+        for (Choice choice : choiceQuestion.getChoices()) {
+            sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                    sheet.getLastRowNum() + 2, 1, 1));
+            sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                    sheet.getLastRowNum() + 2, 2, 15));
+            sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                    sheet.getLastRowNum() + 2, 16, 18));
+            sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                    sheet.getLastRowNum() + 2, 19, 21));
+
+            Row firstChoiceRow = sheet.createRow(sheet.getLastRowNum() + 1);
+            Row secondChoiceRow = sheet.createRow(sheet.getLastRowNum() + 1);
+
+            Cell markCell = firstChoiceRow.createCell(1, CellType.STRING);
+            markCell.setCellStyle(answerTextStyleCenteredBlackFont);
+            markCell.setCellValue(choice.getMark());
+
+            Cell choiceCell = firstChoiceRow.createCell(2, CellType.STRING);
+            choiceCell.setCellStyle(questionBodyStyle);
+            choiceCell.setCellValue(choice.getText());
+
+            Cell selectionRateCell = firstChoiceRow.createCell(16, CellType.STRING);
+            selectionRateCell.setCellStyle(answerTextStyleCenteredBlueFont);
+            selectionRateCell.setCellValue(choice.getPercentOfSelection());
+
+            Cell selectionNumberCell = firstChoiceRow.createCell(19, CellType.STRING);
+            selectionNumberCell.setCellStyle(answerTextStyleCenteredBlueFont);
+            selectionNumberCell.setCellValue(choice.getNumberOfSelection());
+        }
+
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                sheet.getLastRowNum() + 2, 11, 15));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                sheet.getLastRowNum() + 2, 16, 18));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 3,
+                sheet.getLastRowNum() + 4, 11, 15));
+        sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 3,
+                sheet.getLastRowNum() + 4, 16, 18));
+
+        Row lastSectionRow1 = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row lastSectionRow2 = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row lastSectionRow3 = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row lastSectionRow4 = sheet.createRow(sheet.getLastRowNum() + 1);
+        Row lastSectionRow5 = sheet.createRow(sheet.getLastRowNum() + 1);
+
+        XSSFCellStyle answerTextStyleVerticalCenteredBlackFont = workbook.createCellStyle();
+        answerTextStyleVerticalCenteredBlackFont.cloneStyleFrom(questionBodyStyle);
+        answerTextStyleVerticalCenteredBlackFont.setVerticalAlignment(VerticalAlignment.CENTER);
+
+        Cell numberOfAnswersTitleCell = lastSectionRow1.createCell(11, CellType.STRING);
+        numberOfAnswersTitleCell.setCellStyle(answerTextStyleVerticalCenteredBlackFont);
+        numberOfAnswersTitleCell.setCellValue("Megválaszolva (alkalom):");
+        Cell numberOfAnswersCell = lastSectionRow1.createCell(16, CellType.STRING);
+        numberOfAnswersCell.setCellStyle(answerTextStyleCenteredBlueFont);
+        numberOfAnswersCell.setCellValue(choiceQuestion.getCompletion());
+
+        Cell numberOfPersonsToAnswerTitleCell = lastSectionRow3.createCell(11, CellType.STRING);
+        numberOfPersonsToAnswerTitleCell.setCellStyle(answerTextStyleVerticalCenteredBlackFont);
+        numberOfPersonsToAnswerTitleCell.setCellValue("Megválaszolásra jogosult személyek száma:");
+        Cell numberOfPersonsToAnswerCell = lastSectionRow3.createCell(16, CellType.STRING);
+        numberOfPersonsToAnswerCell.setCellStyle(answerTextStyleCenteredBlueFont);
+
+        String numberOfPersonsToAnswer;
+        if (choiceQuestion.isUnionMembersOnly()) numberOfPersonsToAnswer = numberOfUnionMembers;
+        else numberOfPersonsToAnswer = numberOfUsers;
+
+        numberOfPersonsToAnswerCell.setCellValue(numberOfPersonsToAnswer);
+    }
+
     private void createExportQuestionHeader(Sheet sheet, XSSFWorkbook workbook, Object question) {
         Integer number = 0;
         String questionText = "";
@@ -734,6 +1114,7 @@ public class ExcelService implements IExcelService {
         boolean isOptional = false;
         Enums.Type type = null;
         boolean isCompletedByCurrentUser = false;
+        boolean isMultipleChoiceEnabled = false;
         if (question instanceof TextualQuestion) {
             number = ((TextualQuestion) question).getNumber();
             questionText = ((TextualQuestion) question).getQuestion();
@@ -755,6 +1136,7 @@ public class ExcelService implements IExcelService {
             isUnionMembersOnly = ((ChoiceQuestion) question).isUnionMembersOnly();
             type = ((ChoiceQuestion) question).getType();
             isCompletedByCurrentUser = ((ChoiceQuestion) question).isCompletedByCurrentUser();
+            isMultipleChoiceEnabled = ((ChoiceQuestion) question).isMultipleChoiceEnabled();
         }
 
         sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1, sheet.getLastRowNum() + 3, 1, 15));
@@ -822,9 +1204,16 @@ public class ExcelService implements IExcelService {
         XSSFCellStyle questionOptionalStyle = workbook.createCellStyle();
         questionOptionalStyle.cloneStyleFrom(unionMembersStyle);
         questionOptionalStyle.setFont(questionOptionalFont);
+        questionOptionalStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
         Cell optionalCell = questionHeaderRow2.createCell(0, CellType.STRING);
         optionalCell.setCellStyle(questionOptionalStyle);
+
+        Cell multipleChoiceCell = questionHeaderRow2.createCell(17, CellType.STRING);
+        multipleChoiceCell.setCellStyle(questionOptionalStyle);
+        if (isMultipleChoiceEnabled) {
+            multipleChoiceCell.setCellValue("(Több válasz is megjelölhető volt)");
+        }
 
         if (isOptional && type != null && !isCompletedByCurrentUser) optionalCell.setCellValue("(opcionális)");
 
@@ -833,8 +1222,6 @@ public class ExcelService implements IExcelService {
         emptyCell1.setCellStyle(questionOptionalStyle);
         Cell emptyCell2 = questionHeaderRow1.createCell(16, CellType.STRING);
         emptyCell2.setCellStyle(questionHeaderStyle);
-        Cell emptyCell3 = questionHeaderRow2.createCell(17, CellType.STRING);
-        emptyCell3.setCellStyle(questionHeaderStyle);
     }
 
     private void createExportEmptyQuestionField(Sheet sheet, XSSFCellStyle style) {

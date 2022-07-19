@@ -97,6 +97,23 @@ public class ExcelController {
         }
     }
 
+    @PostMapping("/downloadResultExcel")
+    public void downloadResultExcel(HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.registerModule(new JavaTimeModule());
+        try {
+            String questionnaireDtoJson = request.getHeader("QuestionnaireDTO");
+            questionnaireDtoJson = removeUnicode(questionnaireDtoJson);
+            QuestionnaireDTO questionnaireDTO = objectMapper.readValue(questionnaireDtoJson, QuestionnaireDTO.class);
+            excelService.exportResultToExcel(response, questionnaireDTO);
+        }
+        catch (Exception e) {
+            if (response.getStatus() == 200) response.setStatus(500);
+        }
+    }
+
     private String removeUnicode(String text) {
         return text
                 .replace("U+00C1", "Á")

@@ -1128,6 +1128,7 @@ public class QuestionnaireService implements IQuestionnaireService {
                     }
                 }
                 response.setSuccessful(true);
+                globalQuestionnaireDTO = response;
             }
             else {
                 for (ScaleQuestion sq : response.getQuestionnaire().getScaleQuestions()) {
@@ -1172,6 +1173,7 @@ public class QuestionnaireService implements IQuestionnaireService {
                 if (!Double.isNaN(completionRate)) formattedCompletionRate = decimalFormat.format(completionRate) + " %";
 
                 response.getQuestionnaire().setCompletionRate(formattedCompletionRate);
+                globalQuestionnaireDTO = response;
                 response.setSuccessful(true);
             }
         }
