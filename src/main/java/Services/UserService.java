@@ -51,6 +51,7 @@ public class UserService implements IUserService {
     private final String invalidName = "A megadott munkavállalói törzsszámhoz tartozó, " +
         "nyilvántartásunkban szereplő név nem egyezik az Ön által megadott névvel.";
     private final String invalidUserNameOrEmail = "Az Ön által megadott felhasználó név vagy e-mail cím nem található.";
+    private final String userNoHaveEmail = "Az Ön által megadott felhasználó névhez nem tartozik regisztrált e-mail cím.";
     private final String success = "Sikeres regisztráció!";
     private final String successfulLogin = "Sikeres bejelentkezés!";
     private final String passwordChanged = "A jelszó megváltozott!";
@@ -113,34 +114,38 @@ public class UserService implements IUserService {
         response = validateNewUser(user);
 
         if (response.isValidUser() && response.getResponseText().isEmpty()) {
-            Token token = tokenService.createToken(Enums.Role.USER, 1);
-            user.setTokens(Arrays.asList(token));
-
-            // -----------------------------------------------------
-            // Remove the first row below when e-mail confirmation process is developed
-            // -----------------------------------------------------
-            // user.setEnabled(true);
-            // -----------------------------------------------------
-
-            if (!user.getUnionMembershipNum().isEmpty()) user.setRole(Enums.Role.UNION_MEMBER_USER);
-            else user.setRole(Enums.Role.USER);
 
             try {
+                User savedUser;
+
+                if (!user.getUnionMembershipNum().isEmpty()) user.setRole(Enums.Role.UNION_MEMBER_USER);
+                else user.setRole(Enums.Role.USER);
+
                 user.setPassword(encrypt(user.getPassword()));
-                User savedUser = userRepository.save(user);
 
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
-                String tokenExpireTime = token.getValidTo().format(formatter);
+                if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                    Token token = tokenService.createToken(Enums.Role.USER, 1);
+                    user.setTokens(Arrays.asList(token));
 
-                String text = "Kedves " + user.getUserName() + "!" +
-                        "\n\nA gszsz.hu kérdőív kitöltő alkalmazásán történt regisztrációjának megerősítése érdekében " +
-                        "kérjük, kattintson a következő linkre: " +
-                        "https://fierce-meadow-29425.herokuapp.com/user/confirmRegistration?id=" + token.getUuid() + "_" + user.getId() +
-                        "\nTájékoztatjuk, hogy a regisztráció megerősítésére a következő időpontig van lehetősége: " +
-                        tokenExpireTime + "." +
-                        "\n\nÜdvözlettel: Gumiipari Szakszervezeti Szövetség";
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
+                    String tokenExpireTime = token.getValidTo().format(formatter);
 
-                emailService.sendSimpleMessage(user.getEmail(), "Regisztráció megerősítése", text);
+                    savedUser = userRepository.save(user);
+
+                    String text = "Kedves " + user.getUserName() + "!" +
+                            "\n\nA gszsz.hu kérdőív kitöltő alkalmazásán történt regisztrációjának megerősítése érdekében " +
+                            "kérjük, kattintson a következő linkre: " +
+                            "https://fierce-meadow-29425.herokuapp.com/user/confirmRegistration?id=" + token.getUuid() + "_" + user.getId() +
+                            "\nTájékoztatjuk, hogy a regisztráció megerősítésére a következő időpontig van lehetősége: " +
+                            tokenExpireTime + "." +
+                            "\n\nÜdvözlettel: Gumiipari Szakszervezeti Szövetség";
+
+                    emailService.sendSimpleMessage(user.getEmail(), "Regisztráció megerősítése", text);
+                }
+                else {
+                    user.setEnabled(true);
+                    savedUser = userRepository.save(user);
+                }
 
                 if (savedUser != null) {
                     response.setResponseText(success);
@@ -370,24 +375,33 @@ public class UserService implements IUserService {
         String emailPopupText = "";
         try {
             boolean givenUserName = true;
-            User foundUser = userRepository.findByUserName(user.getUserName());
-            if (foundUser == null) {
-                givenUserName = false;
-                foundUser = userRepository.findByEmail(user.getUserName());
+            User foundUser = null;
+
+            if (user.getUserName() != null && !user.getUserName().isEmpty()) {
+                foundUser = userRepository.findByUserName(user.getUserName());
+
+                if (foundUser == null) {
+                    givenUserName = false;
+                    foundUser = userRepository.findByEmail(user.getUserName());
+                }
             }
             if (foundUser != null && foundUser.isEnabled()) {
-                String text = "";
-                String userNameText = givenUserName ? "" : "\nAz Ön felhasználó neve a következő: " + foundUser.getUserName();
-                text = "Kedves " + foundUser.getUserName() + "!" +
-                        "\n\nÖn a gszsz.hu kérdőív kitöltő alkalmazásán regisztrált profilja jelszavának megküldését kérte, " +
-                        "melyre tekintettel az alábbiakról tájékoztatjuk:" + userNameText +
-                        "\nAz Ön jelszava a következő: " + decrypt(foundUser.getPassword()) +
-                        "\n\nÜdvözlettel: Gumiipari Szakszervezeti Szövetség";
-                emailPopupText = givenUserName ? "nyilvántartásunkban szereplő" : "megadott";
-                emailService.sendSimpleMessage(foundUser.getEmail(), "Elfelejtett jelszó", text);
 
-                String userNamePopupText = givenUserName ? "" : "felhasználó nevét és ";
-                response.setResponseText("Az Ön " + userNamePopupText +  "jelszavát elküldtük a " + emailPopupText + " e-mail címére");
+                if (!foundUser.getEmail().isEmpty()) {
+                    String text = "";
+                    String userNameText = givenUserName ? "" : "\nAz Ön felhasználó neve a következő: " + foundUser.getUserName();
+                    text = "Kedves " + foundUser.getUserName() + "!" +
+                            "\n\nÖn a gszsz.hu kérdőív kitöltő alkalmazásán regisztrált profilja jelszavának megküldését kérte, " +
+                            "melyre tekintettel az alábbiakról tájékoztatjuk:" + userNameText +
+                            "\nAz Ön jelszava a következő: " + decrypt(foundUser.getPassword()) +
+                            "\n\nÜdvözlettel: Gumiipari Szakszervezeti Szövetség";
+                    emailPopupText = givenUserName ? "nyilvántartásunkban szereplő" : "megadott";
+                    emailService.sendSimpleMessage(foundUser.getEmail(), "Elfelejtett jelszó", text);
+
+                    String userNamePopupText = givenUserName ? "" : "felhasználó nevét és ";
+                    response.setResponseText("Az Ön " + userNamePopupText +  "jelszavát elküldtük a " + emailPopupText + " e-mail címére");
+                }
+                else response.setResponseText(userNoHaveEmail);
             }
             else response.setResponseText(invalidUserNameOrEmail);
         }
@@ -486,7 +500,7 @@ public class UserService implements IUserService {
                 response.setResponseText(userNameOrPasswordExists);
                 return response;
             }
-            else if (userRepository.findByEmail(user.getEmail()) != null) {
+            else if (!user.getEmail().isEmpty() && userRepository.findByEmail(user.getEmail()) != null) {
                 response.setValidUser(false);
                 response.setResponseText(emailExists);
                 return response;
