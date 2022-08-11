@@ -138,7 +138,7 @@ public class UserService implements IUserService {
                             "https://fierce-meadow-29425.herokuapp.com/user/confirmRegistration?id=" + token.getUuid() + "_" + user.getId() +
                             "\nTájékoztatjuk, hogy a regisztráció megerősítésére a következő időpontig van lehetősége: " +
                             tokenExpireTime + "." +
-                            "\n\nÜdvözlettel: Gumiipari Szakszervezeti Szövetség";
+                            "\n\nÜdvözlettel: Makói Gumiipari Szakszervezet";
 
                     emailService.sendSimpleMessage(user.getEmail(), "Regisztráció megerősítése", text);
                 }
@@ -394,7 +394,7 @@ public class UserService implements IUserService {
                             "\n\nÖn a gszsz.hu kérdőív kitöltő alkalmazásán regisztrált profilja jelszavának megküldését kérte, " +
                             "melyre tekintettel az alábbiakról tájékoztatjuk:" + userNameText +
                             "\nAz Ön jelszava a következő: " + decrypt(foundUser.getPassword()) +
-                            "\n\nÜdvözlettel: Gumiipari Szakszervezeti Szövetség";
+                            "\n\nÜdvözlettel: Makói Gumiipari Szakszervezet";
                     emailPopupText = givenUserName ? "nyilvántartásunkban szereplő" : "megadott";
                     emailService.sendSimpleMessage(foundUser.getEmail(), "Elfelejtett jelszó", text);
 
