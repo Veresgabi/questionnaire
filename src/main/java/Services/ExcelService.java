@@ -754,28 +754,32 @@ public class ExcelService implements IExcelService {
         if (scaleQuestion.getType() != null) {
             sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
                     sheet.getLastRowNum() + 1, 1, 11));
-            sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
-                    sheet.getLastRowNum() + 3, 12, 21));
-            sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 3,
-                    sheet.getLastRowNum() + 3, 1, 11));
-
+            if (scaleQuestion.getScaleMaxNumber() > 10) {
+                if (!scaleQuestion.isCompletedByCurrentUser()) {
+                    sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                            sheet.getLastRowNum() + 7, 12, 21));
+                }
+                else {
+                    sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                            sheet.getLastRowNum() + 5, 12, 21));
+                }
+            }
+            else {
+                sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                        sheet.getLastRowNum() + 3, 12, 21));
+            }
             Row firstRow = sheet.createRow(sheet.getLastRowNum() + 1);
             Cell emptyCell1 = firstRow.createCell(0, CellType.STRING);
-            emptyCell1.setCellStyle(questionBodyStyle );
+            emptyCell1.setCellStyle(questionBodyStyle);
             emptyCell1 = firstRow.createCell(1, CellType.STRING);
-            emptyCell1.setCellStyle(questionBodyStyle );
+            emptyCell1.setCellStyle(questionBodyStyle);
             emptyCell1 = firstRow.createCell(12, CellType.STRING);
-            emptyCell1.setCellStyle(questionBodyStyle );
+            emptyCell1.setCellStyle(questionBodyStyle);
 
             Row secondRow = sheet.createRow(sheet.getLastRowNum() + 1);
-            Cell emptyCell2 = secondRow.createCell(0, CellType.STRING);
-            emptyCell2.setCellStyle(questionBodyStyle );
 
-            Row thirdRow = sheet.createRow(sheet.getLastRowNum() + 1);
-            Cell emptyCell3 = thirdRow.createCell(0, CellType.STRING);
-            emptyCell3.setCellStyle(questionBodyStyle );
-            emptyCell3 = thirdRow.createCell(1, CellType.STRING);
-            emptyCell3.setCellStyle(questionBodyStyle );
+            Cell emptyCell2 = secondRow.createCell(0, CellType.STRING);
+            emptyCell2.setCellStyle(questionBodyStyle);
 
             String choosenValue = questionnaireDTO.getAnswers()
                     .stream()
@@ -791,20 +795,95 @@ public class ExcelService implements IExcelService {
             if (scaleQuestion.isCompletedByCurrentUser()) scaleNumberStyle = inactiveMarkStyle;
             else scaleNumberStyle = markStyle;
 
-            for (int j = 1; j <= 11; j++) {
+            if (scaleQuestion.getScaleMaxNumber() > 10) {
+                sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum(),
+                        sheet.getLastRowNum(), 1, 4));
+                sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 2,
+                        sheet.getLastRowNum() + 2, 1, 4));
 
-                Cell numberCell = secondRow.createCell(j, CellType.STRING);
-                numberCell.setCellStyle(scaleNumberStyle);
+                Cell minNumberTitleCell = secondRow.createCell(1, CellType.STRING);
+                minNumberTitleCell.setCellStyle(scaleNumberStyle);
+                minNumberTitleCell.setCellValue("Minimálisan kiválasztható érték:");
+                Cell minNumberCell = secondRow.createCell(5, CellType.STRING);
+                minNumberCell.setCellStyle(scaleNumberStyle);
+                minNumberCell.setCellValue(scaleQuestion.getScaleMinNumber());
 
-                if (actualScaleNumber <= scaleQuestion.getScaleMaxNumber()) {
-                    numberCell.setCellValue(actualScaleNumber);
+                sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum(),
+                        sheet.getLastRowNum(), 6, 11));
+                emptyCell2 = secondRow.createCell(6, CellType.STRING);
+                emptyCell2.setCellStyle(questionBodyStyle);
 
-                    if (choosenValue != null && choosenValue.equals(actualScaleNumber + "")) {
-                        numberCell.setCellStyle(selectedMarkStyle);
-                    }
+                sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                        sheet.getLastRowNum() + 1, 0, 11));
+                Row thirdRow = sheet.createRow(sheet.getLastRowNum() + 1);
+                Cell emptyCell3 = thirdRow.createCell(0, CellType.STRING);
+                emptyCell3.setCellStyle(questionBodyStyle);
+
+                sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                        sheet.getLastRowNum() + 1, 6, 11));
+                Row fourthRow = sheet.createRow(sheet.getLastRowNum() + 1);
+                Cell emptyCell4 = fourthRow.createCell(0, CellType.STRING);
+                emptyCell4.setCellStyle(questionBodyStyle);
+                emptyCell4 = fourthRow.createCell(6, CellType.STRING);
+                emptyCell4.setCellStyle(questionBodyStyle);
+
+                Cell maxNumberTitleCell = fourthRow.createCell(1, CellType.STRING);
+                maxNumberTitleCell.setCellValue("Maximálisan kiválasztható érték:");
+                maxNumberTitleCell.setCellStyle(scaleNumberStyle);
+                Cell maxNumberCell = fourthRow.createCell(5, CellType.STRING);
+                maxNumberCell.setCellStyle(scaleNumberStyle);
+                maxNumberCell.setCellValue(scaleQuestion.getScaleMaxNumber());
+
+                if (!scaleQuestion.isCompletedByCurrentUser()) {
+                    sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum() + 1,
+                            sheet.getLastRowNum() + 1, 0, 11));
+                    Row fifthRow = sheet.createRow(sheet.getLastRowNum() + 1);
+                    Cell emptyCell5 = fifthRow.createCell(0, CellType.STRING);
+                    emptyCell5.setCellStyle(questionBodyStyle);
+
+                    Row sixthRow = sheet.createRow(sheet.getLastRowNum() + 1);
+                    sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum(),
+                            sheet.getLastRowNum(), 1, 4));
+                    sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum(),
+                            sheet.getLastRowNum(), 6, 11));
+                    Cell emptyCell6 = sixthRow.createCell(0, CellType.STRING);
+                    emptyCell6.setCellStyle(questionBodyStyle);
+                    emptyCell6 = sixthRow.createCell(6, CellType.STRING);
+                    emptyCell6.setCellStyle(questionBodyStyle);
+
+                    XSSFCellStyle selectedStyle = workbook.createCellStyle();
+                    selectedStyle.cloneStyleFrom(selectedMarkStyle);
+                    selectedStyle.setAlignment(HorizontalAlignment.LEFT);
+                    Cell choosenValueTitleCell = sixthRow.createCell(1, CellType.STRING);
+                    choosenValueTitleCell.setCellStyle(selectedStyle);
+                    choosenValueTitleCell.setCellValue("Kiválasztott érték:");
+
+                    Cell choosenValueCell = sixthRow.createCell(5, CellType.STRING);
+                    choosenValueCell.setCellStyle(selectedMarkStyle);
+                    choosenValueCell.setCellValue(choosenValue);
                 }
-                actualScaleNumber++;
             }
+            else {
+                for (int j = 1; j <= 11; j++) {
+
+                    Cell numberCell = secondRow.createCell(j, CellType.STRING);
+                    numberCell.setCellStyle(scaleNumberStyle);
+
+                    if (actualScaleNumber <= scaleQuestion.getScaleMaxNumber()) {
+                        numberCell.setCellValue(actualScaleNumber);
+
+                        if (choosenValue != null && choosenValue.equals(actualScaleNumber + "")) {
+                            numberCell.setCellStyle(selectedMarkStyle);
+                        }
+                    }
+                    actualScaleNumber++;
+                }
+            }
+            Row lastRow = sheet.createRow(sheet.getLastRowNum() + 1);
+            sheet.addMergedRegion(new CellRangeAddress(sheet.getLastRowNum(),
+                    sheet.getLastRowNum(), 0, 11));
+            Cell emptyCellLast = lastRow.createCell(0, CellType.STRING);
+            emptyCellLast.setCellStyle(questionBodyStyle);
         }
         else {
             createExportEmptyQuestionField(sheet, questionBodyStyle);
