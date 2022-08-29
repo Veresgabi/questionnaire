@@ -1,6 +1,7 @@
 package Services;
 
 import DTOs.QuestionnaireDTO;
+import Models.Questionnaire;
 
 public interface IQuestionnaireService {
     QuestionnaireDTO saveQuestionnaire(QuestionnaireDTO questionnaireDTO);
@@ -13,4 +14,5 @@ public interface IQuestionnaireService {
     QuestionnaireDTO getApiResponse();
     QuestionnaireDTO getGlobalQuestionnaireDTO();
     void setGlobalQuestionnaireDTO(QuestionnaireDTO globalQuestionnaireDTO);
+    Questionnaire closeQuestionnaire(Questionnaire questionnaire);
 }

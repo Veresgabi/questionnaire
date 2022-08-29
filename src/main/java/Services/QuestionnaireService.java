@@ -1286,4 +1286,14 @@ public class QuestionnaireService implements IQuestionnaireService {
 
         return questionnaires;
     }
+
+    @Override
+    public Questionnaire closeQuestionnaire(Questionnaire questionnaire) {
+        if (questionnaire.getState() == Enums.State.PUBLISHED
+                && questionnaire.getDeadline() != null && questionnaire.getDeadline().isBefore(LocalDateTime.now())) {
+            questionnaire.setState(Enums.State.CLOSED);
+            return questionnaireRepository.save(questionnaire);
+        }
+        return questionnaire;
+    }
 }

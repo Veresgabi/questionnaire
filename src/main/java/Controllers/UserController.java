@@ -153,7 +153,13 @@ public class UserController {
         return userService.confirmRegistration(id);
     }
 
-    @Transactional
+    @PostMapping("/sendNewQuestionnaireEmail")
+    @ResponseBody
+    public QuestionnaireDTO sendNewQuestionnaireEmail(@RequestBody QuestionnaireDTO questionnaireDTO) {
+        return emailService.sendNewQuestionnaireEmail(questionnaireDTO);
+    }
+
+    /* @Transactional
     @GetMapping("/testDeleteAllTable")
     @ResponseBody
     public UserResponseDTO testDeleteAllTable() {
@@ -491,5 +497,5 @@ public class UserController {
             response.setResponseText("A hiba a következő: " + e.getMessage());
         }
         return response;
-    }
+    } */
 }

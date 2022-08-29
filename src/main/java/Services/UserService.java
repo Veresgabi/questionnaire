@@ -92,7 +92,7 @@ public class UserService implements IUserService {
             else if (!response.isSuccessful()) return response;
         }
         try {
-            List<User> disabledUsers = userRepository.getExpiredUsers();
+            List<User> disabledUsers = userRepository.getDisabledUsers();
             List<User> deletedUsers = disabledUsers
                     .stream()
                     .filter(u -> u.getTokens()

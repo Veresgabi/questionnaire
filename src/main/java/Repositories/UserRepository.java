@@ -1,6 +1,7 @@
 package Repositories;
 
 import Models.User;
+import Utils.Enums;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -25,11 +26,17 @@ public interface UserRepository extends CrudRepository<User, Long> {
     User findByPassword(String password);
     List<User> findAll();
 
+    @Query("SELECT userName, email FROM User u where (u.role = 0 or u.role = 1) and u.email != '' and u.enabled = true")
+    List<String[]> findAllUsers();
+
+    @Query("SELECT userName, email FROM User u where u.role = 1 and u.email != '' and u.enabled = true")
+    List<String[]> findUnionMembers();
+
     @Query("SELECT password FROM User")
     List<String> findPasswords();
 
     User save(User user);
 
     @Query("SELECT u FROM User u where u.enabled = false")
-    List<User> getExpiredUsers();
+    List<User> getDisabledUsers();
 }
