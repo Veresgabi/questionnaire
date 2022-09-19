@@ -23,6 +23,8 @@ public interface AnswerRepository extends CrudRepository<Answer, Long> {
 
   default List<String> findByTextualQuestionIdLimited2(Long textualQuestionId, int limit, int offset) {
     Configuration config = new Configuration();
+    config.setProperty("hibernate.connection.username", System.getenv("DB_USERNAME"));
+    config.setProperty("hibernate.connection.password", System.getenv("DB_PASSWORD"));
     config.configure();
     // local SessionFactory bean created
     SessionFactory sessionFactory = config.buildSessionFactory();
