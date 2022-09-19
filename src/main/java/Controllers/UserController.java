@@ -165,7 +165,15 @@ public class UserController {
     @GetMapping("/testOffsetClientDB")
     @ResponseBody
     public List<String> testOffsetClientDB() {
-        return answerRepository.findByTextualQuestionIdLimited2(11L, 5, 3);
+        try {
+            return answerRepository.findByTextualQuestionIdLimited2(11L, 5, 3);
+        }
+        catch (Exception e) {
+            List<String> errorList = new ArrayList<>();
+            errorList.add(e.toString());
+
+            return errorList;
+        }
     }
 
 
