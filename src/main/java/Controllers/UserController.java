@@ -3,10 +3,7 @@ package Controllers;
 import DTOs.QuestionnaireDTO;
 import DTOs.UserRequestDTO;
 import DTOs.UserResponseDTO;
-import Models.Questionnaire;
-import Models.RegistrationNumberQuestionnaire;
-import Models.UnionMembershipNumber;
-import Models.User;
+import Models.*;
 import Repositories.*;
 import Services.IEmailService;
 import Services.IQuestionnaireService;
@@ -158,6 +155,19 @@ public class UserController {
     public QuestionnaireDTO sendNewQuestionnaireEmail(@RequestBody QuestionnaireDTO questionnaireDTO) {
         return emailService.sendNewQuestionnaireEmail(questionnaireDTO);
     }
+
+    @GetMapping("/testOffset")
+    @ResponseBody
+    public List<String> testOffset() {
+        return answerRepository.findByTextualQuestionIdLimited2(159L, 5, 3);
+    }
+
+    @GetMapping("/testOffsetClientDB")
+    @ResponseBody
+    public List<String> testOffsetClientDB() {
+        return answerRepository.findByTextualQuestionIdLimited2(11L, 5, 3);
+    }
+
 
     /* @Transactional
     @GetMapping("/testDeleteAllTable")

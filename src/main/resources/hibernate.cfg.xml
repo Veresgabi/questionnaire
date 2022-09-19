@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <!-- <property name="connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+        <property name="connection.driver_class">com.mysql.jdbc.Driver</property> -->
+
+        <!-- <property name="connection.driver_class">org.h2.Driver</property>
+        <property name="connection.url">jdbc:h2:~/users_db</property>
+        <property name="connection.username">user123</property>
+        <property name="connection.password">password123</property> -->
+        <property name="connection.driver_class">org.postgresql.Driver</property>
+        <property name="connection.url">postgres://fpnqqfyimgkizr:4571efc2b8602b7a8861426c0cd2ca1d1f099ee76eafe275aa64d39914f2eebf@ec2-54-235-98-1.compute-1.amazonaws.com:5432/d5lcapepitqp5d</property>
+        <property name="connection.username">fpnqqfyimgkizr</property>
+        <property name="connection.password">4571efc2b8602b7a8861426c0cd2ca1d1f099ee76eafe275aa64d39914f2eebf</property>
+        <property name="connection.pool_size">3</property>
+        <!-- <property name="dialect">org.hibernate.dialect.MySQL8Dialect</property> -->
+        <!-- <property name="dialect">org.hibernate.dialect.PostgresQLDialect</property> -->
+        <property name="dialect">org.hibernate.dialect.PostgresPlusDialect</property>
+        <property name="current_session_context_class">thread</property>
+        <property name="show_sql">true</property>
+        <property name="format_sql">true</property>
+        <property name="hbm2ddl.auto">update</property>
+        <mapping class="Models.Answer"/>
+        <mapping class="Models.ChoiceAnswer"/>
+    </session-factory>
+</hibernate-configuration>
