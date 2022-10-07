@@ -15,4 +15,6 @@ public interface IQuestionnaireService {
     QuestionnaireDTO getGlobalQuestionnaireDTO();
     void setGlobalQuestionnaireDTO(QuestionnaireDTO globalQuestionnaireDTO);
     Questionnaire closeQuestionnaire(Questionnaire questionnaire);
+    Integer getLimit();
+    QuestionnaireDTO turnPage(QuestionnaireDTO questionnaireDTO);
 }

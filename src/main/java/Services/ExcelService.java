@@ -4,6 +4,7 @@ import DTOs.ExcelDTO;
 import DTOs.QuestionnaireDTO;
 import DTOs.UserResponseDTO;
 import Models.*;
+import Repositories.AnswerRepository;
 import Repositories.ExcelUploadStaticsRepository;
 import Repositories.RegNumberRepository;
 import Repositories.UnionMembershipNumRepository;
@@ -41,6 +42,8 @@ public class ExcelService implements IExcelService {
     public RegNumberRepository regNumRepo;
     @Autowired
     public ExcelUploadStaticsRepository excelUploadStaticsRepository;
+    @Autowired
+    public AnswerRepository answerRepository;
     @Autowired
     public IQuestionnaireService questionnaireService ;
 
@@ -677,6 +680,11 @@ public class ExcelService implements IExcelService {
     private void createExportTextualQuestionResult(Sheet sheet, XSSFWorkbook workbook, XSSFCellStyle questionBodyStyle,
                                              QuestionnaireDTO questionnaireDTO, TextualQuestion textualQuestion) {
         createExportQuestionHeader(sheet, workbook, textualQuestion);
+
+        if (questionnaireService.getLimit() < textualQuestion.getNumberOfAnswers()) {
+            List<Answer> answers = answerRepository.findByTextualQuestionId(textualQuestion.getId());
+            textualQuestion.setAnswers(answers);
+        }
 
         List<String> answerTexts = textualQuestion.getAnswers()
                 .stream()

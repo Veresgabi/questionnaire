@@ -44,9 +44,16 @@ public class TextualQuestion {
     @Transient
     private List<Answer> answers;
 
+    @Transient
+    private Integer numberOfAnswers;
+
+    @Transient
+    private Integer offsetOfAnswers;
+
     public TextualQuestion(Long id, Integer number, Enums.Type type, boolean isOptional,
                            boolean isUnionMembersOnly, String question, boolean isCompletedByCurrentUser,
-                           Questionnaire questionnaire, List<Answer> answers) {
+                           Questionnaire questionnaire, List<Answer> answers, Integer numberOfAnswers,
+                           Integer offsetOfAnswers) {
         this.id = id;
         this.number = number;
         this.type = type;
@@ -56,6 +63,8 @@ public class TextualQuestion {
         this.isCompletedByCurrentUser = isCompletedByCurrentUser;
         this.questionnaire = questionnaire;
         this.answers = answers;
+        this.numberOfAnswers = numberOfAnswers;
+        this.offsetOfAnswers = offsetOfAnswers;
     }
 
     public TextualQuestion() { }
@@ -130,5 +139,21 @@ public class TextualQuestion {
 
     public void setQuestionnaire(Questionnaire questionnaire) {
         this.questionnaire = questionnaire;
+    }
+
+    public Integer getNumberOfAnswers() {
+        return numberOfAnswers;
+    }
+
+    public void setNumberOfAnswers(Integer numberOfAnswers) {
+        this.numberOfAnswers = numberOfAnswers;
+    }
+
+    public Integer getOffsetOfAnswers() {
+        return offsetOfAnswers;
+    }
+
+    public void setOffsetOfAnswers(Integer offsetOfAnswers) {
+        this.offsetOfAnswers = offsetOfAnswers;
     }
 }

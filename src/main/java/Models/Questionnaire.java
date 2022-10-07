@@ -86,6 +86,8 @@ public class Questionnaire implements Comparable<Questionnaire> {
     @Transient
     private Integer completionVacBorrowed;
 
+    private Integer textualResultPaginationLimit;
+
     public Questionnaire(Long id, String title, boolean isUnionMembersOnly,
                          List<ChoiceQuestion> choiceQuestions, List<ScaleQuestion> scaleQuestions,
                          List<TextualQuestion> textualQuestions, boolean isPublished, Enums.State state,
@@ -305,5 +307,13 @@ public class Questionnaire implements Comparable<Questionnaire> {
 
     public String getFormattedLastModified() {
         return formattedLastModified;
+    }
+
+    public Integer getTextualResultPaginationLimit() {
+        return textualResultPaginationLimit;
+    }
+
+    public void setTextualResultPaginationLimit(Integer textualResultPaginationLimit) {
+        this.textualResultPaginationLimit = textualResultPaginationLimit;
     }
 }

@@ -41,9 +41,6 @@ public class UserController {
     public ExcelUploadStaticsRepository excelUploadStaticsRepository;
 
     @Autowired
-    public QuestionnaireRepository questionnaireRepository;
-
-    @Autowired
     public RegistrationNumberQuestionnaireRepository RegNumberQuestionnaireRepository;
 
     @Autowired
@@ -155,27 +152,6 @@ public class UserController {
     public QuestionnaireDTO sendNewQuestionnaireEmail(@RequestBody QuestionnaireDTO questionnaireDTO) {
         return emailService.sendNewQuestionnaireEmail(questionnaireDTO);
     }
-
-    @GetMapping("/testOffset")
-    @ResponseBody
-    public List<String> testOffset() {
-        return answerRepository.findByTextualQuestionIdLimited2(159L, 5, 3);
-    }
-
-    @GetMapping("/testOffsetClientDB")
-    @ResponseBody
-    public List<String> testOffsetClientDB() {
-        try {
-            return answerRepository.findByTextualQuestionIdLimited2(11L, 5, 3);
-        }
-        catch (Exception e) {
-            List<String> errorList = new ArrayList<>();
-            errorList.add(e.toString());
-
-            return errorList;
-        }
-    }
-
 
     /* @Transactional
     @GetMapping("/testDeleteAllTable")

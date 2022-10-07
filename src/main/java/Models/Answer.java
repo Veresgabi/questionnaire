@@ -26,7 +26,7 @@ public class Answer {
     private Long choiceQuestionId;
 
     @Column(name = "isUnionMembersOnly")
-    private boolean isUnionMembersOnly;
+    private Boolean isUnionMembersOnly;
 
     @OneToMany(cascade=CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name="answer_Id")
@@ -46,7 +46,7 @@ public class Answer {
 
 
     public Answer(Long id, String content, Long textualQuestionId, Long scaleQuestionId,
-                  Long choiceQuestionId, boolean isUnionMembersOnly, List<ChoiceAnswer> choiceAnswers) {
+                  Long choiceQuestionId, Boolean isUnionMembersOnly, List<ChoiceAnswer> choiceAnswers) {
         this.id = id;
         this.content = content;
         // this.textualQuestion = question;
@@ -125,11 +125,11 @@ public class Answer {
         this.choiceQuestionId = choiceQuestionId;
     }
 
-    public boolean isUnionMembersOnly() {
+    public Boolean isUnionMembersOnly() {
         return isUnionMembersOnly;
     }
 
-    public void setUnionMembersOnly(boolean unionMembersOnly) {
+    public void setUnionMembersOnly(Boolean unionMembersOnly) {
         isUnionMembersOnly = unionMembersOnly;
     }
 

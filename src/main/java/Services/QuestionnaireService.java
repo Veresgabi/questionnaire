@@ -49,6 +49,8 @@ public class QuestionnaireService implements IQuestionnaireService {
 
     private static final String onlyForUnionMemebers = "Csak szakszervezeti tagok számára";
 
+    private static final Integer limit = 5;
+
     private QuestionnaireDTO apiResponse;
 
     private QuestionnaireDTO globalQuestionnaireDTO;
@@ -64,6 +66,11 @@ public class QuestionnaireService implements IQuestionnaireService {
     public void setGlobalQuestionnaireDTO(QuestionnaireDTO globalQuestionnaireDTO) {
         this.globalQuestionnaireDTO = globalQuestionnaireDTO;
     }
+
+    @Override
+    public Integer getLimit() {
+        return limit;
+    };
 
     @Transactional
     public QuestionnaireDTO saveQuestionnaire(QuestionnaireDTO questionnaireDTO) {
@@ -400,7 +407,7 @@ public class QuestionnaireService implements IQuestionnaireService {
                                     qu.getTextualQuestions().stream().map(tq -> {
                                         if (tq.isUnionMembersOnly())
                                             return new TextualQuestion(null, tq.getNumber(), null, true, true,
-                                                    onlyForUnionMemebers, false, null, null);
+                                                    onlyForUnionMemebers, false, null, null, null,null);
                                         else return tq;
                                     }).collect(Collectors.toList()),
 
@@ -1091,6 +1098,7 @@ public class QuestionnaireService implements IQuestionnaireService {
                     response.setSuccessful(false);
                     return response;
                 }
+                questionnaire.setTextualResultPaginationLimit(limit);
                 response.setQuestionnaire(questionnaire);
             }
             else {
@@ -1103,8 +1111,12 @@ public class QuestionnaireService implements IQuestionnaireService {
 
                 if (!tq.isUnionMembersOnly() || currentUser.getRole().equals(Enums.Role.UNION_MEMBER_USER)
                         || currentUser.getRole().equals(Enums.Role.UNION_MEMBER_ADMIN)) {
-                    List<Answer> answers = answerRepository.findByTextualQuestionId(tq.getId());
+
+                    List<Answer> answers = answerRepository.findByTextualQuestionIdLimited(tq.getId(), limit, 0);
+                    int numberOfAnswers = answerRepository.getNumberOfTextualAnswers(tq.getId());
                     tq.setAnswers(answers);
+                    tq.setNumberOfAnswers(numberOfAnswers);
+                    tq.setOffsetOfAnswers(0);
                 }
                 else {
                     tq.setType(null);
@@ -1295,5 +1307,96 @@ public class QuestionnaireService implements IQuestionnaireService {
             return questionnaireRepository.save(questionnaire);
         }
         return questionnaire;
+    }
+
+    @Override
+    public QuestionnaireDTO turnPage(QuestionnaireDTO questionnaireDTO) {
+
+        QuestionnaireDTO response = new QuestionnaireDTO();
+
+        // 1. Check token is valid
+        UserResponseDTO userValidateResponse = tokenService.checkToken(questionnaireDTO.getTokenUUID());
+        response.setAuthSuccess(userValidateResponse.isAuthSuccess());
+        response.setSuccessful(userValidateResponse.isSuccessful());
+        response.setResponseText(userValidateResponse.getResponseText());
+
+        // If not valid, return the response!
+        if (!response.isAuthSuccess() || !response.isSuccessful()) return response;
+
+        User currentUser = userValidateResponse.getUser();
+
+        // 2. Check the current user of the page is equals to user of token
+        if (!currentUser.getId().equals(questionnaireDTO.getUser().getId())) {
+            response.setExpiredPage(true);
+            return response;
+        }
+
+        // 3. Check the role is compatible for the requested action
+        if (currentUser.getRole().equals(Enums.Role.ADMIN)) {
+            response.setExpiredPage(true);
+            return response;
+        }
+
+        if (!response.isAuthSuccess() || !response.isSuccessful()) return response;
+
+        try {
+            // Validation
+            Questionnaire questionnaire = questionnaireRepository.findQuestionnaireById(questionnaireDTO.getQuestionnaire().getId());
+            if (questionnaire != null) {
+                if (currentUser.getRole().equals(Enums.Role.UNION_MEMBER_ADMIN) && questionnaire.getState().equals(Enums.State.OPEN)) {
+                    response.setResponseText("A kérdőív még nem került publikálásra.");
+                    response.setSuccessful(false);
+                    return response;
+                }
+                else if (currentUser.getRole().equals(Enums.Role.USER) && questionnaire.isUnionMembersOnly()) {
+                    response.setResponseText("A kérdőív eredményeinek megtekintésére csak szakszervezeti tagoknak van lehetőségük.");
+                    response.setSuccessful(false);
+                    return response;
+                }
+                else if ((currentUser.getRole().equals(Enums.Role.USER) || currentUser.getRole().equals(Enums.Role.UNION_MEMBER_USER))
+                        && !questionnaire.getState().equals(Enums.State.RESULT_PUBLISHED)) {
+                    response.setResponseText("A kérdőív eredményei még nem kerültek publikálásra.");
+                    response.setSuccessful(false);
+                    return response;
+                }
+                questionnaire.setTextualResultPaginationLimit(limit);
+                response.setQuestionnaire(questionnaire);
+                response.getQuestionnaire().setTextualQuestions(questionnaireDTO.getQuestionnaire().getTextualQuestions());
+            }
+            else {
+                response.setResponseText("Az adatbázisban nem található a lekérdezett kérdőív.");
+                response.setSuccessful(false);
+                return response;
+            }
+
+            for (TextualQuestion tq : response.getQuestionnaire().getTextualQuestions()) {
+
+                if (!tq.isUnionMembersOnly() || currentUser.getRole().equals(Enums.Role.UNION_MEMBER_USER)
+                        || currentUser.getRole().equals(Enums.Role.UNION_MEMBER_ADMIN)) {
+
+                    if (tq.getId().equals(questionnaireDTO.getQuestionnaire().getTextualQuestions().get(0).getId())) {
+
+                        tq.setOffsetOfAnswers(questionnaireDTO.getQuestionnaire().getTextualQuestions().get(0).getOffsetOfAnswers());
+                        List<Answer> answers = answerRepository.findByTextualQuestionIdLimited(tq.getId(), limit, limit * tq.getOffsetOfAnswers());
+                        int numberOfAnswers = answerRepository.getNumberOfTextualAnswers(tq.getId());
+                        tq.setAnswers(answers);
+                        tq.setNumberOfAnswers(numberOfAnswers);
+                    }
+                    else response.getQuestionnaire().getTextualQuestions().remove(tq);
+                }
+                else {
+                    tq.setType(null);
+                    tq.setQuestion(onlyForUnionMemebers);
+                }
+            }
+        }
+        catch (Exception e) {
+            if (e.getMessage() != null)
+                response.setResponseText("A válaszok lekérdezése sikertelen a következő hiba miatt: " + e.getMessage());
+            else response.setResponseText("A válaszok lekérdezése sikertelen a következő hiba miatt: " + e);
+
+            response.setSuccessful(false);
+        }
+        return response;
     }
 }

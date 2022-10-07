@@ -1,6 +1,7 @@
 package Controllers;
 
 import DTOs.QuestionnaireDTO;
+import Models.Answer;
 import Models.Questionnaire;
 import Models.RegistrationNumber;
 import Models.User;
@@ -93,6 +94,13 @@ public class QuestionController {
     public QuestionnaireDTO getResult(@RequestBody QuestionnaireDTO questionnaireDTO) {
         QuestionnaireDTO response = questionnaireService.getResult(questionnaireDTO);
         return userService.removeUserPassword(response);
+    }
+
+    @PostMapping("/turnPage")
+    @ResponseBody
+    public QuestionnaireDTO turnPage(@RequestBody QuestionnaireDTO questionnaireDTO) {
+        QuestionnaireDTO response = questionnaireService.turnPage(questionnaireDTO);
+        return response;
     }
 
     @GetMapping("/testCloseQuestionnaire")
