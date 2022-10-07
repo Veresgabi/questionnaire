@@ -49,7 +49,7 @@ public class QuestionnaireService implements IQuestionnaireService {
 
     private static final String onlyForUnionMemebers = "Csak szakszervezeti tagok számára";
 
-    private static final Integer limit = 5;
+    private static final Integer limit = 30;
 
     private QuestionnaireDTO apiResponse;
 
