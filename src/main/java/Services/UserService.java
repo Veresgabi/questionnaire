@@ -209,20 +209,20 @@ public class UserService implements IUserService {
                             "felhasználó nevének és jelszavának megadásával.";
 
                     redirectText = "másodpercen belül átirányítjuk a bejelentkező felületre.";
-                    redirectPage = "http://gszsz.hu/kerdoiv/Login.html";
+                    redirectPage = "http://gszsz.hu/kerdoiv/login.html";
                 }
                 else if (LocalDateTime.now().isAfter(token.getValidTo()) && currentUser != null) {
                     if (!currentUser.isEnabled()) {
                         responseText = "Profiljának aktiválása sikertelen, mivel az aktiválásra " +
                                 "rendelkezésre álló idő lejárt.";
                         redirectText = "másodpercen belül átirányítjuk a regisztrációs felületre.";
-                        redirectPage = "http://gszsz.hu/kerdoiv/Register.html";
+                        redirectPage = "http://gszsz.hu/kerdoiv/register.html";
                     }
                     else {
                         responseText = "Profiljának aktiválása már sikeresen megtörtént korábban, " +
                                 "így már be tud jelentkezni felhasználó nevének és jelszavának megadásával.";
                         redirectText = "másodpercen belül átirányítjuk a bejelentkező felületre.";
-                        redirectPage = "http://gszsz.hu/kerdoiv/Login.html";
+                        redirectPage = "http://gszsz.hu/kerdoiv/login.html";
                     }
                 }
                 // no need this case below because if the token is exists, the currentUser cannot be deleted
@@ -233,13 +233,13 @@ public class UserService implements IUserService {
                 if (currentUser == null || !currentUser.isEnabled()) {
                     responseText = "Profiljának aktiválása nem történt meg, mivel az azonosítás sikertelen volt.";
                     redirectText = "másodpercen belül átirányítjuk a regisztrációs felületre.";
-                    redirectPage = "http://gszsz.hu/kerdoiv/Register.html";
+                    redirectPage = "http://gszsz.hu/kerdoiv/register.html";
                 }
                 else if (currentUser != null && currentUser.isEnabled()) {
                     responseText = "Profiljának aktiválása már sikeresen megtörtént korábban, " +
                             "így már be tud jelentkezni felhasználó nevének és jelszavának megadásával.";
                     redirectText = "másodpercen belül átirányítjuk a bejelentkező felületre.";
-                    redirectPage = "http://gszsz.hu/kerdoiv/Login.html";
+                    redirectPage = "http://gszsz.hu/kerdoiv/login.html";
                 }
             }
         }

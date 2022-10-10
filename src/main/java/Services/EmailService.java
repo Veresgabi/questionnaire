@@ -168,7 +168,7 @@ public class EmailService implements IEmailService {
                         "\n\nTájékoztatjuk, hogy a gszsz.hu kérdőív kitöltő alkalmazásán új kérdőív került közzétételre " +
                         questionnaireTitle + " címen, melynek kitöltési határideje " + questionnaireDeadline + ". " +
                         "\nKérjük, a kérdőívet szíveskedjen kitölteni a megjelölt határidőig. " +
-                        "\nhttp://gszsz.hu/kerdoiv/Login.html " +
+                        "\nhttp://gszsz.hu/kerdoiv/login.html " +
                         "\nAmennyiben a kérdőív kitöltése már megtörtént, jelen levelünket kérjük, tekintse tárgytalannak. " +
                         "\n\nÜdvözlettel: Makói Gumiipari Szakszervezet";
 

@@ -8,7 +8,7 @@
         <property name="connection.url">jdbc:postgresql://ec2-54-235-98-1.compute-1.amazonaws.com:5432/d5lcapepitqp5d</property>
         <property name="dialect">org.hibernate.dialect.PostgresPlusDialect</property>
 
-        <!-- <property name="connection.driver_class">org.h2.Driver</property>
+        <!--  <property name="connection.driver_class">org.h2.Driver</property>
         <property name="connection.url">jdbc:h2:~/users_db</property>
         <property name="dialect">org.hibernate.dialect.MySQL8Dialect</property>
         <property name="connection.username">user123</property>
